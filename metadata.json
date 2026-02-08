@@ -1,0 +1,7 @@
+{
+  "name": "MacroPlan - Versão 0.1",
+  "description": "A premium meal tracking application that uses AI to analyze food photos for nutritional content including calories and macronutrients.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
