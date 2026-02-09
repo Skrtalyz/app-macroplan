@@ -2,6 +2,7 @@
 export type Language = 'pt-BR' | 'en-US';
 export type Unit = 'metric' | 'imperial';
 
+// Translation strings for both pt-BR and en-US locales
 export const translations = {
   'pt-BR': {
     home: 'Home',
@@ -50,10 +51,15 @@ export const translations = {
     support_intro: 'Estamos aqui para ajudar você a aproveitar ao máximo o MacroPlan.',
     faq_title: 'Perguntas Frequentes',
     contact_title: 'Entre em Contato',
+    contact_subtitle: 'Tem alguma dúvida ou sugestão? Envie um e-mail para nossa equipe.',
     faq_1_q: 'Como funciona a análise nutricional?',
     faq_1_a: 'O MacroPlan usa inteligência artificial avançada para identificar os alimentos na imagem e estimar seus valores nutricionais.',
     faq_2_q: 'Os valores são precisos?',
     faq_2_a: 'Os valores são aproximados e baseados em análise por IA. Para maior precisão, consulte um nutricionista.',
+    faq_3_q: 'Como posso alterar minha meta diária?',
+    faq_3_a: 'Você pode alterar sua meta nas configurações do aplicativo.',
+    faq_4_q: 'O app funciona sem internet?',
+    faq_4_a: 'A análise de imagem requer conexão com a internet para processar os dados via IA.',
     appearance: 'Aparência',
     theme: 'Tema',
     theme_light: 'Tema Claro',
@@ -113,7 +119,34 @@ export const translations = {
     item_removed: 'Ingrediente removido',
     analysis_reset: 'Ingredientes restaurados',
     manual_entry: 'Entrada manual',
-    ai_estimating: 'IA estimando valores...'
+    ai_estimating: 'IA estimando valores...',
+    passwords_not_match: 'As senhas não coincidem.',
+    email_in_use: 'Este e-mail já está em uso.',
+    invalid_credentials: 'E-mail ou senha incorretos.',
+    auth_title: 'Entrar',
+    auth_subtitle: 'Bem-vindo de volta ao MacroPlan',
+    welcome_to_macroplan: 'Comece sua jornada hoje',
+    name: 'Nome',
+    email: 'E-mail',
+    password: 'Senha',
+    confirm_password: 'Confirmar senha',
+    login: 'Entrar',
+    register: 'Criar conta',
+    no_account: 'Não tem uma conta?',
+    have_account: 'Já tem uma conta?',
+    name_too_short: 'Nome muito curto.',
+    password_error_invalid: 'Senha atual incorreta.',
+    password_changed_success: 'Senha alterada com sucesso!',
+    personal_info: 'Informações Pessoais',
+    profile: 'Perfil',
+    name_label: 'Nome Completo',
+    email_label: 'Endereço de E-mail',
+    password_label: 'Senha',
+    edit: 'Editar',
+    change_password: 'Alterar Senha',
+    current_password: 'Senha Atual',
+    new_password: 'Nova Senha',
+    confirm_new_password: 'Confirmar Nova Senha'
   },
   'en-US': {
     home: 'Home',
@@ -149,6 +182,8 @@ export const translations = {
     support: 'Support',
     metric: 'Metric (g, kg)',
     imperial: 'Imperial (oz, lb)',
+    select_language: 'Select Language',
+    select_unit: 'Unit of Measure',
     analyzing: 'Analyzing...',
     take_photo: 'Take photo',
     gallery: 'Gallery',
@@ -160,10 +195,15 @@ export const translations = {
     support_intro: 'We are here to help you get the most out of MacroPlan.',
     faq_title: 'Frequently Asked Questions',
     contact_title: 'Get in Touch',
+    contact_subtitle: 'Have any questions or suggestions? Send an email to our team.',
     faq_1_q: 'How does nutritional analysis work?',
     faq_1_a: 'MacroPlan uses advanced AI to identify foods in images and estimate nutritional values.',
     faq_2_q: 'Are the values accurate?',
     faq_2_a: 'Values are approximate. For greater accuracy, consult a nutritionist.',
+    faq_3_q: 'How can I change my daily goal?',
+    faq_3_a: 'You can change your goal in the app settings.',
+    faq_4_q: 'Does the app work offline?',
+    faq_4_a: 'Image analysis requires an internet connection to process data via AI.',
     appearance: 'Appearance',
     theme: 'Theme',
     theme_light: 'Light Theme',
@@ -223,16 +263,49 @@ export const translations = {
     item_removed: 'Ingredient removed',
     analysis_reset: 'Analysis restored',
     manual_entry: 'Manual entry',
-    ai_estimating: 'AI estimating values...'
+    ai_estimating: 'AI estimating values...',
+    passwords_not_match: 'Passwords do not match.',
+    email_in_use: 'Email already in use.',
+    invalid_credentials: 'Invalid email or password.',
+    auth_title: 'Sign In',
+    auth_subtitle: 'Welcome back to MacroPlan',
+    welcome_to_macroplan: 'Start your journey today',
+    name: 'Name',
+    email: 'Email',
+    password: 'Password',
+    confirm_password: 'Confirm Password',
+    login: 'Login',
+    register: 'Register',
+    no_account: "Don't have an account?",
+    have_account: 'Already have an account?',
+    name_too_short: 'Name is too short.',
+    password_error_invalid: 'Current password incorrect.',
+    password_changed_success: 'Password changed successfully!',
+    personal_info: 'Personal Information',
+    profile: 'Profile',
+    name_label: 'Full Name',
+    email_label: 'Email Address',
+    password_label: 'Password',
+    edit: 'Edit',
+    change_password: 'Change Password',
+    current_password: 'Current Password',
+    new_password: 'New Password',
+    confirm_new_password: 'Confirm New Password'
   }
 };
 
+/**
+ * Formats a number for display according to the locale.
+ */
 export const formatNumber = (val: number, lang: Language = 'pt-BR'): string => {
   if (Number.isInteger(val)) return val.toString();
   const formatted = val.toFixed(1);
   return lang === 'pt-BR' ? formatted.replace('.', ',') : formatted;
 };
 
+/**
+ * Formats a weight value based on the selected unit and locale.
+ */
 export const formatWeight = (grams: number, unit: Unit, lang: Language = 'pt-BR'): string => {
   if (unit === 'metric') return `${formatNumber(grams, lang)}g`;
   const oz = grams * 0.035274;
