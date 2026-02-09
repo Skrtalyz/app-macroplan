@@ -7,6 +7,9 @@
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      // Shim para process.env para evitar erros de ReferenceError no navegador
+      window.process = { env: { API_KEY: "" } };
+      
       tailwind.config = {
         darkMode: 'class',
         theme: {
@@ -49,15 +52,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root {
-        /* Design Tokens de Modo (Claro por padrão) */
         --bg-color: #FFFFFF;
         --card-color: #F8F9FA;
         --card-elevated: #F1F3F5;
         --text-primary: #111111;
         --text-secondary: #555555;
         --border-color: #E9ECEF;
-        
-        /* Design Tokens de Paleta (Azul por padrão) */
         --brand-primary-rgb: 37 99 235;
         --brand-light-rgb: 59 130 246;
         --brand-dark-rgb: 29 78 216;
@@ -131,6 +131,7 @@
       }
     }
     </script>
+    <script type="module" src="./index.tsx"></script>
   </head>
   <body>
     <div class="liquid-bg"></div>

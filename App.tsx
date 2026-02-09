@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Layout from './components/Layout';
-import Home from './screens/Home';
-import History from './screens/History';
-import AnalysisDetail from './screens/AnalysisDetail';
-import Settings from './screens/Settings';
-import Legal from './screens/Legal';
-import Support from './screens/Support';
-import AnalysisFlow from './components/AnalysisFlow';
-import { AppTab, MealAnalysis, UserProfile } from './types';
-import { translations } from './localization';
+import Layout from './components/Layout.tsx';
+import Home from './screens/Home.tsx';
+import History from './screens/History.tsx';
+import AnalysisDetail from './screens/AnalysisDetail.tsx';
+import Settings from './screens/Settings.tsx';
+import Legal from './screens/Legal.tsx';
+import Support from './screens/Support.tsx';
+import AnalysisFlow from './components/AnalysisFlow.tsx';
+import { AppTab, MealAnalysis, UserProfile } from './types.ts';
+import { translations } from './localization.ts';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.HOME);
@@ -32,7 +32,6 @@ const App: React.FC = () => {
 
   const t = translations[user.language];
 
-  // Gerenciamento de Tema (Modo Claro/Escuro)
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -47,7 +46,6 @@ const App: React.FC = () => {
       root.classList.remove('dark');
     }
 
-    // Cores Brand Fixas (Azul Real Premium)
     root.style.setProperty('--brand-primary-rgb', '37 99 235');
     root.style.setProperty('--brand-light-rgb', '59 130 246');
     root.style.setProperty('--brand-dark-rgb', '29 78 216');
@@ -56,7 +54,6 @@ const App: React.FC = () => {
     setIsAppReady(true);
   }, [user.theme]);
 
-  // Sincronização
   useEffect(() => {
     if (isAppReady) localStorage.setItem('macroplan_profile_v1', JSON.stringify(user));
   }, [user, isAppReady]);
