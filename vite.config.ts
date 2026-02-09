@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Injeta apenas a chave necessária de forma segura
+    // Injeta a chave do ambiente de build da Netlify
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY || "")
   },
   server: {

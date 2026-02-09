@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       // Configuração básica do Tailwind via CDN
+      window.process = { env: { API_KEY: "" } };
       tailwind.config = {
         darkMode: 'class',
         theme: {
@@ -121,6 +122,18 @@
   <body>
     <div class="liquid-bg"></div>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
+    <!-- No Vite, o caminho deve ser relativo à raiz do projeto -->
+    <script type="module" src="/index.tsx"></script>
+    <script>
+      // Fallback de carregamento para debug
+      window.onload = function() {
+        setTimeout(function() {
+          const root = document.getElementById('root');
+          if (root && root.innerHTML === '') {
+            console.warn('Alerta: O app não renderizou após 3 segundos. Verifique erros no console.');
+          }
+        }, 3000);
+      };
+    </script>
   </body>
 </html>
