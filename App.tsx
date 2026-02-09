@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import Home from './screens/Home';
@@ -19,7 +18,6 @@ const App: React.FC = () => {
   const [isAppReady, setIsAppReady] = useState(false);
   
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('macroplan_profile_v1');
     const defaultProfile: UserProfile = {
       name: 'Explorador',
       dailyGoal: 2200,
@@ -27,12 +25,19 @@ const App: React.FC = () => {
       language: 'pt-BR',
       theme: 'system'
     };
-    return saved ? JSON.parse(saved) : defaultProfile;
+    
+    try {
+      const saved = localStorage.getItem('macroplan_profile_v1');
+      return saved ? { ...defaultProfile, ...JSON.parse(saved) } : defaultProfile;
+    } catch (e) {
+      console.error("Failed to parse user profile", e);
+      return defaultProfile;
+    }
   });
 
   const t = translations[user.language];
 
-  // Gerenciamento de Tema (Modo Claro/Escuro)
+  // Gerenciamento de Tema
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -47,7 +52,7 @@ const App: React.FC = () => {
       root.classList.remove('dark');
     }
 
-    // Cores Brand Fixas (Azul Real Premium)
+    // Cores Brand Fixas
     root.style.setProperty('--brand-primary-rgb', '37 99 235');
     root.style.setProperty('--brand-light-rgb', '59 130 246');
     root.style.setProperty('--brand-dark-rgb', '29 78 216');
@@ -63,13 +68,22 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (isAppReady) {
-      const saved = localStorage.getItem('macroplan_history_v1');
-      setAnalyses(saved ? JSON.parse(saved) : []);
+      try {
+        const saved = localStorage.getItem('macroplan_history_v1');
+        setAnalyses(saved ? JSON.parse(saved) : []);
+      } catch (e) {
+        console.error("Failed to parse history", e);
+        setAnalyses([]);
+      }
     }
   }, [isAppReady]);
 
   const saveHistory = useCallback((items: MealAnalysis[]) => {
-    localStorage.setItem('macroplan_history_v1', JSON.stringify(items));
+    try {
+      localStorage.setItem('macroplan_history_v1', JSON.stringify(items));
+    } catch (e) {
+      console.error("Failed to save history", e);
+    }
     setAnalyses(items);
   }, []);
 

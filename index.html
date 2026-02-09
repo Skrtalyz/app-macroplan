@@ -6,6 +6,7 @@
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      // Polyfill básico para process.env caso algum módulo tente acessar antes do bundle
       window.process = window.process || { env: { API_KEY: "" } };
 
       tailwind.config = {
