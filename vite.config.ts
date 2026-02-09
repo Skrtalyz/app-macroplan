@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Garante que process.env funcione mesmo no navegador
-    'process.env': process.env
+    // Injeta apenas a chave necessária de forma segura
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || "")
   },
   server: {
     port: 3000,
@@ -13,6 +13,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'recharts', 'lucide-react'],
+          genai: ['@google/genai']
+        }
+      }
+    }
   }
 });

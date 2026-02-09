@@ -6,12 +6,8 @@
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Previne erro fatal "process is not defined" em ambientes de produção (Netlify/Vercel)
-      window.process = { 
-        env: { 
-          API_KEY: "" // A Netlify injetará isso via variáveis de ambiente
-        } 
-      };
+      // Shim essencial para evitar erro "process is not defined"
+      window.process = window.process || { env: { API_KEY: "" } };
 
       tailwind.config = {
         darkMode: 'class',
@@ -115,9 +111,9 @@
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
     "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3"
   }
@@ -127,7 +123,7 @@
   <body>
     <div class="liquid-bg"></div>
     <div id="root"></div>
-    <!-- Script principal apontando para o arquivo TSX que o Vite irá compilar -->
+    <!-- No Vite, o caminho deve ser relativo ao root e sem importmap -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
