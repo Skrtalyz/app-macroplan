@@ -1,15 +1,22 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import Layout from './components/Layout';
-import Home from './screens/Home';
-import History from './screens/History';
-import AnalysisDetail from './screens/AnalysisDetail';
-import Settings from './screens/Settings';
-import Legal from './screens/Legal';
-import Support from './screens/Support';
-import AnalysisFlow from './components/AnalysisFlow';
-import { AppTab, MealAnalysis, UserProfile } from './types';
-import { translations } from './localization';
+import Layout from './components/Layout.tsx';
+import Home from './screens/Home.tsx';
+import History from './screens/History.tsx';
+import AnalysisDetail from './screens/AnalysisDetail.tsx';
+import Settings from './screens/Settings.tsx';
+import Legal from './screens/Legal.tsx';
+import Support from './screens/Support.tsx';
+import AnalysisFlow from './components/AnalysisFlow.tsx';
+import { AppTab, MealAnalysis, UserProfile } from './types.ts';
+import { translations } from './localization.ts';
+
+const DEFAULT_PROFILE: UserProfile = {
+  name: 'Explorador',
+  dailyGoal: 2200,
+  unit: 'metric',
+  language: 'pt-BR',
+  theme: 'system'
+};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.HOME);
@@ -19,24 +26,20 @@ const App: React.FC = () => {
   const [isAppReady, setIsAppReady] = useState(false);
   
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('macroplan_profile_v1');
-    const defaultProfile: UserProfile = {
-      name: 'Explorador',
-      dailyGoal: 2200,
-      unit: 'metric',
-      language: 'pt-BR',
-      theme: 'system'
-    };
-    return saved ? JSON.parse(saved) : defaultProfile;
+    try {
+      const saved = localStorage.getItem('macroplan_profile_v1');
+      return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
+    } catch (e) {
+      return DEFAULT_PROFILE;
+    }
   });
 
-  const t = translations[user.language];
+  const t = translations[user.language] || translations['pt-BR'];
 
-  // Gerenciamento de Tema (Modo Claro/Escuro)
   useEffect(() => {
     const root = window.document.documentElement;
-    
     let actualTheme = user.theme;
+    
     if (user.theme === 'system') {
       actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
@@ -47,24 +50,21 @@ const App: React.FC = () => {
       root.classList.remove('dark');
     }
 
-    // Cores Brand Fixas (Azul Real Premium)
-    root.style.setProperty('--brand-primary-rgb', '37 99 235');
-    root.style.setProperty('--brand-light-rgb', '59 130 246');
-    root.style.setProperty('--brand-dark-rgb', '29 78 216');
-    root.style.setProperty('--brand-shadow', 'rgba(37, 99, 235, 0.3)');
-    
     setIsAppReady(true);
   }, [user.theme]);
 
-  // Sincronização
   useEffect(() => {
     if (isAppReady) localStorage.setItem('macroplan_profile_v1', JSON.stringify(user));
   }, [user, isAppReady]);
 
   useEffect(() => {
     if (isAppReady) {
-      const saved = localStorage.getItem('macroplan_history_v1');
-      setAnalyses(saved ? JSON.parse(saved) : []);
+      try {
+        const saved = localStorage.getItem('macroplan_history_v1');
+        setAnalyses(saved ? JSON.parse(saved) : []);
+      } catch (e) {
+        setAnalyses([]);
+      }
     }
   }, [isAppReady]);
 
@@ -105,33 +105,41 @@ const App: React.FC = () => {
   const handleClearHistory = (type: 'today' | 'week' | 'all') => {
     if (type === 'all') {
       saveHistory([]);
-      return;
+    } else {
+      const todayStart = new Date().setHours(0, 0, 0, 0);
+      const updated = analyses.filter(m => m.timestamp < todayStart);
+      saveHistory(updated);
     }
-    const todayStart = new Date().setHours(0, 0, 0, 0);
-    const updated = analyses.filter(m => type === 'today' ? m.timestamp < todayStart : true);
-    saveHistory(updated);
   };
 
   if (!isAppReady) return null;
 
   const renderScreen = () => {
-    switch (activeTab) {
-      case AppTab.HOME:
-        return <Home user={user} analyses={analyses} onAnalyzeClick={() => setIsAnalysisFlowOpen(true)} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} />;
-      case AppTab.HISTORY:
-        return <History user={user} analyses={analyses} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} onDeleteMeal={handleDeleteMeal} />;
-      case AppTab.DETAIL:
-        return <AnalysisDetail user={user} meal={selectedMeal} onBack={() => setActiveTab(AppTab.HISTORY)} onUpdateMeal={handleUpdateMeal} onDeleteMeal={handleDeleteMeal} />;
-      case AppTab.SETTINGS:
-        return <Settings user={user} onUpdateProfile={handleUpdateProfile} onClearHistory={handleClearHistory} onNavigate={setActiveTab} />;
-      case AppTab.TERMS: 
-        return <Legal user={user} type="terms" onBack={() => setActiveTab(AppTab.SETTINGS)} />;
-      case AppTab.PRIVACY: 
-        return <Legal user={user} type="privacy" onBack={() => setActiveTab(AppTab.SETTINGS)} />;
-      case AppTab.SUPPORT: 
-        return <Support user={user} onBack={() => setActiveTab(AppTab.SETTINGS)} />;
-      default: 
-        return <Home user={user} analyses={analyses} onAnalyzeClick={() => setIsAnalysisFlowOpen(true)} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} />;
+    try {
+      switch (activeTab) {
+        case AppTab.HOME:
+          return <Home user={user} analyses={analyses} onAnalyzeClick={() => setIsAnalysisFlowOpen(true)} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} />;
+        case AppTab.HISTORY:
+          return <History user={user} analyses={analyses} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} onDeleteMeal={handleDeleteMeal} />;
+        case AppTab.DETAIL:
+          if (!selectedMeal) {
+            return <History user={user} analyses={analyses} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} onDeleteMeal={handleDeleteMeal} />;
+          }
+          return <AnalysisDetail user={user} meal={selectedMeal} onBack={() => setActiveTab(AppTab.HISTORY)} onUpdateMeal={handleUpdateMeal} onDeleteMeal={handleDeleteMeal} />;
+        case AppTab.SETTINGS:
+          return <Settings user={user} onUpdateProfile={handleUpdateProfile} onClearHistory={handleClearHistory} onNavigate={setActiveTab} />;
+        case AppTab.TERMS: 
+          return <Legal user={user} type="terms" onBack={() => setActiveTab(AppTab.SETTINGS)} />;
+        case AppTab.PRIVACY: 
+          return <Legal user={user} type="privacy" onBack={() => setActiveTab(AppTab.SETTINGS)} />;
+        case AppTab.SUPPORT: 
+          return <Support user={user} onBack={() => setActiveTab(AppTab.SETTINGS)} />;
+        default: 
+          return <Home user={user} analyses={analyses} onAnalyzeClick={() => setIsAnalysisFlowOpen(true)} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} />;
+      }
+    } catch (err) {
+      console.error("Critical Render Error:", err);
+      return <div className="p-10 text-center font-bold">Algo deu errado ao carregar esta tela.</div>;
     }
   };
 

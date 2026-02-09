@@ -1,8 +1,15 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { MealAnalysis, FoodItem } from "./types";
+import { MealAnalysis, FoodItem } from "./types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Inicialização segura via getter para evitar crash de top-level
+let _ai: GoogleGenAI | null = null;
+const getAIClient = () => {
+  if (!_ai) {
+    const apiKey = process.env.API_KEY || "";
+    _ai = new GoogleGenAI({ apiKey });
+  }
+  return _ai;
+};
 
 async function getImageHash(base64: string): Promise<string> {
   const msgUint8 = new TextEncoder().encode(base64);
@@ -33,7 +40,7 @@ const ANALYSIS_SCHEMA = {
           protein: { type: Type.NUMBER },
           carbs: { type: Type.NUMBER },
           fat: { type: Type.NUMBER },
-          confidence: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
+          confidence: { type: Type.STRING },
         },
         required: ['name', 'amount', 'calories', 'protein', 'carbs', 'fat', 'confidence'],
       },
@@ -44,21 +51,11 @@ const ANALYSIS_SCHEMA = {
   required: ['name', 'calories', 'healthScore', 'protein', 'carbs', 'fat', 'items', 'ingredients', 'observation'],
 };
 
-const INGREDIENT_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    calories: { type: Type.NUMBER, description: 'Calories per 100g' },
-    protein: { type: Type.NUMBER, description: 'Protein per 100g' },
-    carbs: { type: Type.NUMBER, description: 'Carbs per 100g' },
-    fat: { type: Type.NUMBER, description: 'Fat per 100g' },
-  },
-  required: ['calories', 'protein', 'carbs', 'fat'],
-};
-
 export const analyzeMealImage = async (base64Image: string, language: string = 'pt-BR', historyContext: string = ''): Promise<Partial<MealAnalysis>> => {
+  const ai = getAIClient();
   const imageHash = await getImageHash(base64Image);
   const cacheKey = `macroplan_cache_v3_${imageHash}`;
-  const cachedResult = localStorage.getItem(cacheKey);
+  const cachedResult = typeof localStorage !== 'undefined' ? localStorage.getItem(cacheKey) : null;
   if (cachedResult) return JSON.parse(cachedResult);
 
   const model = 'gemini-3-flash-preview';
@@ -69,23 +66,40 @@ export const analyzeMealImage = async (base64Image: string, language: string = '
     contents: {
       parts: [
         { inlineData: { mimeType: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } },
-        { text: `Analyze this meal. Language: ${targetLanguage}. Return JSON matching schema.` },
+        { text: `Analyze this meal image. Return JSON. Language: ${targetLanguage}. Context: ${historyContext}` },
       ],
     },
-    config: { responseMimeType: "application/json", responseSchema: ANALYSIS_SCHEMA, temperature: 0 },
+    config: { 
+      responseMimeType: "application/json", 
+      responseSchema: ANALYSIS_SCHEMA, 
+      temperature: 0 
+    },
   });
 
   const analysisResult = JSON.parse(response.text);
-  try { localStorage.setItem(cacheKey, JSON.stringify(analysisResult)); } catch (e) {}
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(cacheKey, JSON.stringify(analysisResult)); } catch (e) {}
   return analysisResult;
 };
 
 export const estimateIngredientNutrition = async (name: string): Promise<Omit<FoodItem, 'name' | 'amount' | 'confidence'>> => {
+  const ai = getAIClient();
   const model = 'gemini-3-flash-preview';
   const response = await ai.models.generateContent({
     model,
-    contents: `Estimate nutritional values for 100g of "${name}". Be precise and realistic.`,
-    config: { responseMimeType: "application/json", responseSchema: INGREDIENT_SCHEMA },
+    contents: `Estimate nutritional values for 100g of "${name}".`,
+    config: { 
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          calories: { type: Type.NUMBER },
+          protein: { type: Type.NUMBER },
+          carbs: { type: Type.NUMBER },
+          fat: { type: Type.NUMBER },
+        },
+        required: ['calories', 'protein', 'carbs', 'fat']
+      }
+    },
   });
   return JSON.parse(response.text);
 };
