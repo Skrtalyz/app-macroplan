@@ -1,9 +1,17 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { MealAnalysis, FoodItem } from "./types";
 
-// Fix: Always use named parameter for apiKey and obtain it exclusively from process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+/**
+ * Obtém uma instância da API de forma segura.
+ * Lança um erro se a API_KEY não estiver configurada.
+ */
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("CONFIG_ERROR: API Key não configurada no ambiente.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 async function getImageHash(base64: string): Promise<string> {
   const msgUint8 = new TextEncoder().encode(base64);
@@ -62,6 +70,8 @@ export const analyzeMealImage = async (base64Image: string, language: string = '
   const cachedResult = localStorage.getItem(cacheKey);
   if (cachedResult) return JSON.parse(cachedResult);
 
+  // Inicialização tardia apenas no momento do uso
+  const ai = getAIClient();
   const model = 'gemini-3-flash-preview';
   const targetLanguage = language === 'pt-BR' ? 'Portuguese (Brazil)' : 'English';
   
@@ -83,6 +93,7 @@ export const analyzeMealImage = async (base64Image: string, language: string = '
 };
 
 export const estimateIngredientNutrition = async (name: string): Promise<Omit<FoodItem, 'name' | 'amount' | 'confidence'>> => {
+  const ai = getAIClient();
   const model = 'gemini-3-flash-preview';
   const response = await ai.models.generateContent({
     model,

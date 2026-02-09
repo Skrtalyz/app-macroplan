@@ -1,17 +1,17 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import App from './App';
 
-const container = document.getElementById('root');
+const rootElement = document.getElementById('root');
 
-if (container) {
-  const root = createRoot(container);
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
       <App />
     </React.StrictMode>
   );
-  console.log("MacroPlan: App inicializado com sucesso.");
+  console.log("MacroPlan: App mounted successfully.");
 } else {
-  console.error("Erro Crítico: Elemento #root não encontrado.");
+  console.error("MacroPlan Fatal: Target container #root not found.");
 }

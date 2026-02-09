@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image as ImageIcon, X, Loader2, RefreshCcw, Check, Plus, Trash2, Ruler, Minus, RotateCcw } from 'lucide-react';
+import { Camera, Image as ImageIcon, X, Loader2, RefreshCcw, Check, Plus, Trash2, Ruler, Minus, RotateCcw, AlertCircle } from 'lucide-react';
 import { analyzeMealImage } from '../geminiService';
 import { MealAnalysis, UserProfile, FoodItem } from '../types';
 import { translations } from '../localization';
@@ -18,7 +18,7 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<Partial<MealAnalysis> | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [adjustingIndex, setAdjustingIndex] = useState<number | null>(null);
   const [tempGrams, setTempGrams] = useState<number>(100);
   const [removedItems, setRemovedItems] = useState<FoodItem[]>([]);
@@ -45,7 +45,7 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
             videoRef.current.srcObject = currentStream;
           }
         } catch (err) {
-          setCameraError(t.camera_access_denied);
+          setErrorMsg(t.camera_access_denied);
           setState('ERROR');
         }
       };
@@ -83,6 +83,7 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
 
   const processImage = async (base64: string) => {
     setState('ANALYZING');
+    setErrorMsg(null);
     const historyContext = history.slice(0, 3).map(m => 
       m.items.map(i => `${i.name}: ${i.amount}`).join(', ')
     ).join(' | ');
@@ -103,7 +104,17 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
         setSnapshot(JSON.parse(JSON.stringify(result.items)));
       }
       setState('CONFIRM');
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Analysis Error:", error);
+      if (error.message?.includes("CONFIG_ERROR")) {
+        setErrorMsg(user.language === 'pt-BR' 
+          ? "Serviço de IA indisponível. Verifique a chave de API." 
+          : "AI Service unavailable. Check API Key configuration.");
+      } else {
+        setErrorMsg(user.language === 'pt-BR' 
+          ? "Não foi possível analisar a imagem. Tente novamente." 
+          : "Could not analyze image. Please try again.");
+      }
       setState('ERROR');
     }
   };
@@ -374,11 +385,13 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
   if (state === 'ERROR') {
     return (
       <div className="fixed inset-0 z-[150] bg-white dark:bg-dark-bg flex flex-col items-center justify-center p-10 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-red-100 rounded-[28px] flex items-center justify-center text-red-500 mb-6">
-           <X size={40} strokeWidth={3} />
+        <div className="w-20 h-20 bg-red-100 dark:bg-red-950/30 rounded-[28px] flex items-center justify-center text-red-500 mb-6 shadow-xl">
+           <AlertCircle size={40} strokeWidth={3} />
         </div>
-        <h2 className="text-xl font-black mb-4">{cameraError || 'Analysis Error'}</h2>
-        <button onClick={() => setState('SELECT')} className="bg-brand-primary text-white px-8 py-4 rounded-2xl font-black active:scale-95 transition-all">{t.back}</button>
+        <h2 className="text-xl font-black mb-4 dark:text-white">{errorMsg || 'Analysis Error'}</h2>
+        <button onClick={() => setState('SELECT')} className="bg-brand-primary text-white px-8 py-4 rounded-2xl font-black active:scale-95 transition-all shadow-lg">
+          {t.back}
+        </button>
       </div>
     );
   }
