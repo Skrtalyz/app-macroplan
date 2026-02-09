@@ -1,18 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, Info, BrainCircuit, RotateCcw, Tag, Trash2, Plus, Minus, X, CheckCircle2, AlertTriangle, Search, Edit3, Bookmark, Loader2 } from 'lucide-react';
+import { ChevronLeft, Info, BrainCircuit, RotateCcw, Tag, Trash2, Plus, Minus, X, CheckCircle2, Search, Edit3, Bookmark, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { MealAnalysis, UserProfile, FoodItem, Macros } from '../types';
 import { translations, formatWeight, formatNumber } from '../localization';
 import { estimateIngredientNutrition } from '../geminiService';
-
-interface AnalysisDetailProps {
-  user: UserProfile;
-  meal: MealAnalysis | null;
-  onBack: () => void;
-  onUpdateMeal?: (id: string, updates: Partial<MealAnalysis>) => void;
-  onDeleteMeal?: (mealId: string) => void;
-}
 
 const FOOD_DATABASE: Omit<FoodItem, 'amount'>[] = [
   { name: 'Arroz Branco Cozido', calories: 130, protein: 2.7, carbs: 28, fat: 0.3 },
@@ -69,14 +61,21 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+// Fix: Added missing AnalysisDetailProps interface
+interface AnalysisDetailProps {
+  user: UserProfile;
+  meal: MealAnalysis | null;
+  onBack: () => void;
+  onUpdateMeal: (mealId: string, updates: Partial<MealAnalysis>) => void;
+  onDeleteMeal: (mealId: string) => void;
+}
+
 const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onUpdateMeal, onDeleteMeal }) => {
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   const [isAddingIngredient, setIsAddingIngredient] = useState(false);
   const [tempItem, setTempItem] = useState<{ name: string, grams: number }>({ name: '', grams: 100 });
   const [searchQuery, setSearchQuery] = useState('');
   const [isEstimating, setIsEstimating] = useState(false);
-  const [removedItems, setRemovedItems] = useState<FoodItem[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [mealLabelInput, setMealLabelInput] = useState(meal?.userLabel || '');
 
@@ -92,16 +91,8 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     setTimeout(() => setToast(null), 3000);
   };
 
-  /**
-   * FONTE ÚNICA DE VERDADE (SINGLE SOURCE OF TRUTH)
-   * Recalcula os macronutrientes totais em tempo real baseando-se na lista de itens.
-   * Se a lista estiver vazia (antes da análise ser carregada ou erro inesperado), 
-   * recorre ao objeto de macros raiz da refeição.
-   */
   const currentMacros = useMemo((): Macros => {
     if (!meal) return { protein: 0, carbs: 0, fat: 0 };
-    
-    // Se temos itens (da IA ou Manuais), eles são a autoridade máxima
     if (meal.items && meal.items.length > 0) {
       return {
         protein: parseFloat(meal.items.reduce((sum, item) => sum + (Number(item.protein) || 0), 0).toFixed(1)),
@@ -109,8 +100,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
         fat: parseFloat(meal.items.reduce((sum, item) => sum + (Number(item.fat) || 0), 0).toFixed(1))
       };
     }
-
-    // Fallback para macros da análise raiz se a lista de itens estiver falhando
     return {
       protein: Number(meal.macros.protein) || 0,
       carbs: Number(meal.macros.carbs) || 0,
@@ -120,13 +109,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
 
   const chartData = useMemo(() => {
     const totals = currentMacros.protein + currentMacros.carbs + currentMacros.fat;
-    
-    if (totals === 0) {
-      return [
-        { name: 'Aguardando dados', value: 1, color: '#E5E7EB', isPlaceholder: true },
-      ];
-    }
-
+    if (totals === 0) return [{ name: 'Aguardando dados', value: 1, color: '#E5E7EB', isPlaceholder: true }];
     return [
       { name: t.protein, value: currentMacros.protein, color: '#2563EB' }, 
       { name: t.carbs, value: currentMacros.carbs, color: '#3b82f6' },   
@@ -142,12 +125,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     return { label: t.score_poor, color: 'text-red-400', bg: 'bg-red-400' };
   }, [meal?.healthScore, t]);
 
-  if (!meal) return (
-    <div className="p-10 text-center h-full flex flex-col items-center justify-center animate-fade-in">
-      <Info size={56} className="text-gray-300 mb-6" />
-      <p className="text-gray-400 font-black text-2xl tracking-tight">Nenhuma refeição selecionada</p>
-    </div>
-  );
+  if (!meal) return null;
 
   const parseGrams = (amount: string): number => {
     const match = amount.match(/(\d+)/);
@@ -180,11 +158,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
       onUpdateMeal(meal.id, {
         items: newItems,
         calories: Math.round(totalCalories),
-        macros: { 
-          protein: parseFloat(totalProtein.toFixed(1)), 
-          carbs: parseFloat(totalCarbs.toFixed(1)), 
-          fat: parseFloat(totalFat.toFixed(1)) 
-        },
+        macros: { protein: totalProtein, carbs: totalCarbs, fat: totalFat },
         healthScore: Math.min(100, Math.max(0, scoreBase)),
         isAdjusted: !resetToOriginal
       });
@@ -248,26 +222,23 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
   };
 
   const handleRemoveItem = (index: number) => {
-    const itemToRemove = meal.items[index];
     const newItems = meal.items.filter((_, i) => i !== index);
-    setRemovedItems(prev => [itemToRemove, ...prev]);
     recalculateTotals(newItems);
     showToast(t.item_removed);
   };
 
   const handleResetAnalysis = () => {
     if (meal.aiOriginalItems?.length && window.confirm(t.confirm_reset)) {
-      setRemovedItems([]);
       recalculateTotals(JSON.parse(JSON.stringify(meal.aiOriginalItems)), true);
       showToast(t.analysis_reset);
     }
   };
 
-  const macroDisplayList = useMemo(() => [
+  const macroDisplayList = [
     { name: t.protein, value: currentMacros.protein, color: '#2563EB' },
     { name: t.carbs, value: currentMacros.carbs, color: '#3b82f6' },
     { name: t.fat, value: currentMacros.fat, color: '#f59e0b' },
-  ], [currentMacros, t]);
+  ];
 
   return (
     <div className="w-full animate-fade-in relative lg:pb-10">
@@ -283,10 +254,10 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
           <div className="relative aspect-square lg:aspect-[4/5] xl:aspect-[3/4] xl:h-[calc(100vh-220px)] w-full overflow-hidden rounded-[42px] md:rounded-[56px] premium-shadow group border border-white dark:border-white/5 bg-gray-100 dark:bg-dark-elevated">
             <img src={meal.image} alt={meal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms] ease-out" />
             <button onClick={onBack} className="absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-5 liquid-glass text-white rounded-[20px] md:rounded-[28px] hover:scale-110 active:scale-90 transition-all z-20 shadow-xl border-white/40">
-              <ChevronLeft size={24} md:size={28} strokeWidth={4} />
+              <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" strokeWidth={4} />
             </button>
-            <button onClick={() => setIsDeleting(true)} className="absolute top-6 right-6 md:top-8 md:right-8 p-3 md:p-5 bg-red-500/10 backdrop-blur-md text-red-500 rounded-[20px] md:rounded-[28px] hover:bg-red-500 hover:text-white transition-all active:scale-90 z-20 shadow-xl">
-              <Trash2 size={24} md:size={28} strokeWidth={2.5} />
+            <button onClick={() => onDeleteMeal(meal.id)} className="absolute top-6 right-6 md:top-8 md:right-8 p-3 md:p-5 bg-red-500/10 backdrop-blur-md text-red-500 rounded-[20px] md:rounded-[28px] hover:bg-red-500 hover:text-white transition-all active:scale-90 z-20 shadow-xl">
+              <Trash2 className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
             </button>
           </div>
 
@@ -313,7 +284,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
           <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/10">
             <div className="flex items-center space-x-3 mb-6">
               <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
-                <Bookmark size={20} md:size={32} strokeWidth={3} />
+                <Bookmark className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} />
               </div>
               <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">{t.meal_label}</h3>
             </div>
@@ -325,17 +296,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                 placeholder={t.meal_name_placeholder}
                 className="w-full bg-white dark:bg-black/20 border border-gray-100 dark:border-white/10 rounded-[20px] px-6 py-4 font-bold text-base md:text-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
               />
-              <div className="flex flex-wrap gap-2">
-                 {quickMealOptions.map(opt => (
-                   <button 
-                    key={opt}
-                    onClick={() => handleMealLabelChange(opt)}
-                    className={`px-4 py-2 rounded-full text-[9px] md:text-[11px] font-black uppercase tracking-tight transition-all ${mealLabelInput === opt ? 'bg-brand-primary text-white shadow-lg' : 'bg-white/40 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'}`}
-                   >
-                     {opt}
-                   </button>
-                 ))}
-              </div>
             </div>
           </section>
 
@@ -366,7 +326,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
-                  <Tag size={20} md:size={32} strokeWidth={3} />
+                  <Tag className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} />
                 </div>
                 <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">{t.identified_foods}</h3>
               </div>
@@ -387,10 +347,10 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                     </div>
                     <div className="flex items-center space-x-1.5 md:space-x-2">
                       <button onClick={() => handleOpenEdit(idx)} className="p-2.5 bg-gray-50 dark:bg-white/10 rounded-lg text-gray-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-all">
-                        <Edit3 size={16} md:size={22} strokeWidth={2.5} />
+                        <Edit3 className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                       </button>
                       <button onClick={() => handleRemoveItem(idx)} className="p-2.5 bg-red-50 dark:bg-red-950/20 rounded-lg text-red-400 hover:bg-red-500 hover:text-white transition-all">
-                        <Trash2 size={16} md:size={22} strokeWidth={2.5} />
+                        <Trash2 className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                       </button>
                     </div>
                   </div>
@@ -422,10 +382,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                     <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 100 }} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[7px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</span>
-                  <span className="text-lg md:text-2xl font-black text-gray-900 dark:text-white tracking-tight">{formatWeight(currentMacros.protein + currentMacros.carbs + currentMacros.fat, user.unit, user.language)}</span>
-                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 xl:flex xl:flex-col gap-3 w-full">
                 {macroDisplayList.map((macro, idx) => (
@@ -442,10 +398,9 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
           </div>
 
           <section className="bg-brand-primary rounded-[36px] md:rounded-[64px] p-8 md:p-20 text-white shadow-3xl shadow-brand-primary/30 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
             <div className="flex items-center space-x-4 md:space-x-8 mb-6 md:mb-12">
               <div className="p-3 md:p-4 bg-white/20 rounded-xl md:rounded-[28px] shadow-xl">
-                 <BrainCircuit size={24} md:size={48} className="text-white" strokeWidth={3} />
+                 <BrainCircuit className="w-6 h-6 md:w-12 md:h-12 text-white" strokeWidth={3} />
               </div>
               <h3 className="text-[9px] md:text-xs font-black text-white/70 uppercase tracking-[0.4em]">{t.observation}</h3>
             </div>
@@ -474,13 +429,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                         placeholder={t.search_food}
                         className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-2xl pl-12 pr-4 py-3.5 font-bold outline-none text-gray-900 dark:text-white"
                       />
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {filteredSearch.map(f => (
-                        <button key={f.name} onClick={() => { setTempItem({ ...tempItem, name: f.name }); setSearchQuery(''); }} className="px-3 py-1.5 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase">
-                          {f.name}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 )}

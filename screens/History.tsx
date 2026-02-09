@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar, Activity, Trash2, AlertTriangle } from 'lucide-react';
 import { MealAnalysis, UserProfile } from '../types';
@@ -59,13 +58,13 @@ const History: React.FC<HistoryProps> = ({ user, analyses, onSelectMeal, onDelet
                 onClick={(e) => confirmDelete(e, meal.id)}
                 className="absolute top-6 left-6 z-10 p-2.5 bg-red-500/10 backdrop-blur-md rounded-xl md:rounded-2xl text-red-500 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-all active:scale-90"
               >
-                <Trash2 size={16} md:size={18} strokeWidth={2.5} />
+                <Trash2 className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
               </button>
 
               <div className="w-full aspect-[4/3] rounded-[24px] md:rounded-[32px] overflow-hidden bg-gray-50 dark:bg-dark-elevated relative border border-gray-100 dark:border-white/5 mb-4 md:mb-6">
                 <img src={meal.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                 <div className="absolute top-3 right-3 md:top-4 md:right-4 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md flex items-center space-x-1.5 md:space-x-2">
-                   <Activity size={12} md:size={14} className={getHealthColor(meal.healthScore || 0)} strokeWidth={3} />
+                   <Activity className={`w-3 h-3 md:w-4 md:h-4 ${getHealthColor(meal.healthScore || 0)}`} strokeWidth={3} />
                    <span className={`text-[10px] md:text-sm font-black ${getHealthColor(meal.healthScore || 0)}`}>{meal.healthScore || 0}</span>
                 </div>
               </div>
@@ -81,7 +80,7 @@ const History: React.FC<HistoryProps> = ({ user, analyses, onSelectMeal, onDelet
                 </div>
                 
                 <div className="text-[9px] md:text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest flex items-center mb-4 md:mb-6">
-                  <Calendar size={10} md:size={12} className="mr-1.5" />
+                  <Calendar className="w-3 h-3 md:w-4 md:h-4 mr-1.5" />
                   {new Date(meal.timestamp).toLocaleDateString(user.language, { day: 'numeric', month: 'short' })}
                 </div>
 

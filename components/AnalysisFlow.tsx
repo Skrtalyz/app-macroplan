@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image as ImageIcon, X, Loader2, RefreshCcw, Check, Plus, Trash2, Ruler, Minus, RotateCcw, Monitor } from 'lucide-react';
+import { Camera, Image as ImageIcon, X, Loader2, RefreshCcw, Check, Plus, Trash2, Ruler, Minus, RotateCcw } from 'lucide-react';
 import { analyzeMealImage } from '../geminiService';
 import { MealAnalysis, UserProfile, FoodItem } from '../types';
-import { translations, formatNumber } from '../localization';
+import { translations } from '../localization';
 
 interface AnalysisFlowProps {
   user: UserProfile;
@@ -90,7 +89,6 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
     try {
       const result = (await analyzeMealImage(base64, user.language, historyContext)) as any;
       
-      // Sincronização rigorosa dos macros retornados pela IA
       const formattedResult: Partial<MealAnalysis> = {
         ...result,
         macros: {
@@ -202,11 +200,11 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
           </div>
           <div className="grid grid-cols-2 gap-4 md:gap-5">
             <button onClick={() => setState('CAMERA')} className="flex flex-col items-center p-6 md:p-8 bg-brand-primary/10 rounded-[28px] md:rounded-[32px] group active:scale-95 transition-all">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-brand-primary text-white rounded-[20px] md:rounded-[22px] flex items-center justify-center mb-4"><Camera size={24} md:size={28} /></div>
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-brand-primary text-white rounded-[20px] md:rounded-[22px] flex items-center justify-center mb-4"><Camera className="w-6 h-6 md:w-8 md:h-8" /></div>
               <span className="font-bold text-sm md:text-base text-brand-primary">{t.take_photo}</span>
             </button>
             <button onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center p-6 md:p-8 bg-blue-50 dark:bg-blue-950/20 rounded-[28px] md:rounded-[32px] active:scale-95 transition-all">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-600 text-white rounded-[20px] md:rounded-[22px] flex items-center justify-center mb-4"><ImageIcon size={24} md:size={28} /></div>
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-600 text-white rounded-[20px] md:rounded-[22px] flex items-center justify-center mb-4"><ImageIcon className="w-6 h-6 md:w-8 md:h-8" /></div>
               <span className="font-bold text-sm md:text-base text-blue-900 dark:text-blue-400">{t.gallery}</span>
             </button>
           </div>
@@ -260,7 +258,7 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
         </div>
         <h2 className="text-xl md:text-2xl font-black tracking-tight">{t.analyzing}</h2>
         <div className="mt-4 flex items-center space-x-2 text-brand-primary font-bold animate-pulse">
-           <Loader2 size={20} className="animate-spin" />
+           <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin" strokeWidth={3} />
            <span className="text-sm">Vision AI Processing...</span>
         </div>
       </div>
@@ -343,7 +341,7 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
 
         <div className="absolute bottom-0 w-full p-6 md:p-8 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-md border-t border-gray-100 dark:border-white/5 safe-bottom">
            <button onClick={handleFinalConfirm} className="w-full bg-brand-primary text-white py-5 rounded-[28px] md:rounded-[32px] font-black text-base md:text-lg shadow-xl shadow-brand-primary/20 flex items-center justify-center space-x-3 active:scale-95 transition-all">
-             <Check size={20} md:size={24} strokeWidth={3} />
+             <Check size={20} className="md:w-6 md:h-6" strokeWidth={3} />
              <span>{t.confirm_save}</span>
            </button>
         </div>

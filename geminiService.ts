@@ -1,9 +1,9 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { MealAnalysis, FoodItem } from "./types";
 
-// Inicialização segura: se a chave não existir, o app não crasha no boot, mas avisa no console
-const API_KEY = process.env.API_KEY || "";
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Fix: Always use named parameter for apiKey and obtain it exclusively from process.env.API_KEY
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 async function getImageHash(base64: string): Promise<string> {
   const msgUint8 = new TextEncoder().encode(base64);
@@ -57,10 +57,6 @@ const INGREDIENT_SCHEMA = {
 };
 
 export const analyzeMealImage = async (base64Image: string, language: string = 'pt-BR', historyContext: string = ''): Promise<Partial<MealAnalysis>> => {
-  if (!API_KEY) {
-    throw new Error("API Key is missing. Please set API_KEY environment variable.");
-  }
-
   const imageHash = await getImageHash(base64Image);
   const cacheKey = `macroplan_cache_v3_${imageHash}`;
   const cachedResult = localStorage.getItem(cacheKey);
@@ -74,27 +70,26 @@ export const analyzeMealImage = async (base64Image: string, language: string = '
     contents: {
       parts: [
         { inlineData: { mimeType: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } },
-        { text: `Analyze this meal. Language: ${targetLanguage}. Return JSON matching schema.` },
+        { text: `Analyze this meal. Context: ${historyContext}. Language: ${targetLanguage}. Return JSON matching schema.` },
       ],
     },
     config: { responseMimeType: "application/json", responseSchema: ANALYSIS_SCHEMA, temperature: 0 },
   });
 
-  const analysisResult = JSON.parse(response.text);
+  const responseText = response.text || "{}";
+  const analysisResult = JSON.parse(responseText);
   try { localStorage.setItem(cacheKey, JSON.stringify(analysisResult)); } catch (e) {}
   return analysisResult;
 };
 
 export const estimateIngredientNutrition = async (name: string): Promise<Omit<FoodItem, 'name' | 'amount' | 'confidence'>> => {
-  if (!API_KEY) {
-    throw new Error("API Key is missing.");
-  }
-  
   const model = 'gemini-3-flash-preview';
   const response = await ai.models.generateContent({
     model,
     contents: `Estimate nutritional values for 100g of "${name}". Be precise and realistic.`,
     config: { responseMimeType: "application/json", responseSchema: INGREDIENT_SCHEMA },
   });
-  return JSON.parse(response.text);
+  
+  const responseText = response.text || "{}";
+  return JSON.parse(responseText);
 };

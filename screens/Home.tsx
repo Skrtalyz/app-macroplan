@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Plus, Activity, ChevronRight } from 'lucide-react';
 import { MealAnalysis, UserProfile } from '../types';
@@ -63,7 +62,7 @@ const Home: React.FC<HomeProps> = ({ user, analyses, onAnalyzeClick, onSelectMea
                   <div className="flex flex-col sm:items-end">
                     <span className="text-gray-400 dark:text-gray-500 text-[9px] md:text-xs font-black uppercase tracking-[0.3em]">{t.avg_health}</span>
                     <div className={`flex items-center space-x-2 mt-2 ${getHealthColor(avgHealthScore)}`}>
-                      <Activity size={24} md:size={32} strokeWidth={4} />
+                      <Activity className="w-6 h-6 md:w-8 md:h-8" strokeWidth={4} />
                       <span className="text-3xl md:text-5xl font-black tracking-tighter">{avgHealthScore}</span>
                     </div>
                   </div>
@@ -98,7 +97,7 @@ const Home: React.FC<HomeProps> = ({ user, analyses, onAnalyzeClick, onSelectMea
             onClick={onAnalyzeClick} 
             className="w-full bg-brand-primary text-white py-6 md:py-12 rounded-[32px] md:rounded-[56px] font-black text-xl md:text-4xl shadow-2xl shadow-brand-primary/30 flex items-center justify-center space-x-4 active:scale-[0.98] transition-all group overflow-hidden"
           >
-            <Plus size={24} md:size={40} strokeWidth={5} />
+            <Plus className="w-6 h-6 md:w-10 md:h-10" strokeWidth={5} />
             <span className="tracking-tight">{t.analyze_meal}</span>
           </button>
         </div>
