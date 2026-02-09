@@ -3,23 +3,19 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/',
   define: {
-    // Injeta a chave do ambiente de build da Netlify
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY || "")
-  },
-  server: {
-    port: 3000,
-    open: true
   },
   build: {
     outDir: 'dist',
+    emptyOutDir: true,
     sourcemap: false,
-    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'recharts', 'lucide-react'],
-          genai: ['@google/genai']
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['lucide-react', 'recharts']
         }
       }
     }

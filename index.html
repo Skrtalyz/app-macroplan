@@ -6,40 +6,16 @@
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Configuração básica do Tailwind via CDN
-      window.process = { env: { API_KEY: "" } };
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             colors: {
               brand: {
-                primary: 'rgb(var(--brand-primary-rgb) / <alpha-value>)',
-                light: 'rgb(var(--brand-light-rgb) / <alpha-value>)',
-                dark: 'rgb(var(--brand-dark-rgb) / <alpha-value>)',
-              },
-              dark: {
-                bg: 'var(--bg-color)',
-                card: 'var(--card-color)',
-                elevated: 'var(--card-elevated)',
-                text: 'var(--text-primary)',
-                border: 'var(--border-color)'
+                primary: '37 99 235',
+                light: '59 130 246',
+                dark: '29 78 216',
               }
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-out forwards',
-              'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'scale-in': 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'scanner': 'scanner 2s infinite ease-in-out',
-              'liquid': 'liquid 20s infinite alternate',
-              'spin-slow': 'spin 3s linear infinite',
-            },
-            keyframes: {
-              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-              scaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-              scanner: { '0%, 100%': { top: '0%' }, '50%': { top: '100%' } },
-              liquid: { '0%': { 'background-position': '0% 50%' }, '100%': { 'background-position': '100% 50%' } }
             }
           }
         }
@@ -73,8 +49,8 @@
         font-family: 'Inter', sans-serif;
         background-color: var(--bg-color);
         color: var(--text-primary);
-        transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
-        -webkit-tap-highlight-color: transparent;
+        margin: 0;
+        transition: background-color 0.4s ease;
         overflow-x: hidden;
       }
       .liquid-bg {
@@ -90,19 +66,11 @@
         background: linear-gradient(-45deg, #050505, #0f172a, #1e1b4b, #050505);
         opacity: 1;
       }
-      .liquid-glass {
-        background: rgba(255, 255, 255, 0.5) !important;
-        backdrop-filter: blur(32px) saturate(200%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      @keyframes liquid {
+        0% { background-position: 0% 50% }
+        50% { background-position: 100% 50% }
+        100% { background-position: 0% 50% }
       }
-      .dark .liquid-glass {
-        background: rgba(30, 30, 35, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      }
-      .premium-shadow {
-        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
-      }
-      .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
   <script type="importmap">
 {
@@ -122,18 +90,7 @@
   <body>
     <div class="liquid-bg"></div>
     <div id="root"></div>
-    <!-- No Vite, o caminho deve ser relativo à raiz do projeto -->
+    <!-- No Vite, o arquivo TSX é o ponto de entrada que será transformado em JS pelo build -->
     <script type="module" src="/index.tsx"></script>
-    <script>
-      // Fallback de carregamento para debug
-      window.onload = function() {
-        setTimeout(function() {
-          const root = document.getElementById('root');
-          if (root && root.innerHTML === '') {
-            console.warn('Alerta: O app não renderizou após 3 segundos. Verifique erros no console.');
-          }
-        }, 3000);
-      };
-    </script>
   </body>
 </html>
