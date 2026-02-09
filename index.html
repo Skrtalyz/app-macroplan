@@ -6,9 +6,7 @@
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Polyfill básico para process.env caso algum módulo tente acessar antes do bundle
-      window.process = window.process || { env: { API_KEY: "" } };
-
+      // Configuração básica do Tailwind via CDN
       tailwind.config = {
         darkMode: 'class',
         theme: {
@@ -123,6 +121,6 @@
   <body>
     <div class="liquid-bg"></div>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
