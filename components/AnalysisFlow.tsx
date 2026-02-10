@@ -233,11 +233,11 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
 
   if (state === 'CAMERA') {
     return (
-      <div className="fixed inset-0 z-[110] bg-black flex flex-col animate-fade-in overflow-hidden">
-        <video ref={videoRef} autoPlay playsInline className="flex-1 object-cover" />
+      <div className="fixed top-0 left-0 w-full h-dvh z-[110] bg-black flex flex-col animate-fade-in overflow-hidden touch-none">
+        <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
         <canvas ref={canvasRef} className="hidden" />
         
-        <div className="absolute inset-0 flex flex-col pointer-events-none">
+        <div className="absolute inset-0 flex flex-col pointer-events-none z-10">
           <div className="flex-1 border-[40px] border-black/40 relative">
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] aspect-square border-2 border-white/40 rounded-[40px]">
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-2xl"></div>
@@ -249,15 +249,26 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
           </div>
         </div>
 
-        <div className="p-8 pb-[calc(2rem + env(safe-area-inset-bottom))] bg-gradient-to-t from-black/80 to-transparent flex items-center justify-around z-20">
-           <button onClick={() => setState('SELECT')} className="p-4 bg-white/10 backdrop-blur-md rounded-full text-white min-w-[56px] min-h-[56px] flex items-center justify-center"><X size={24} /></button>
-           <button onClick={capturePhoto} className="w-24 h-24 bg-white rounded-full flex items-center justify-center active:scale-90 transition-all border-8 border-white/20">
+        {/* Header Superior - Protegido contra Notch */}
+        <div className="absolute top-0 left-0 w-full pt-[calc(1rem + env(safe-area-inset-top))] px-6 flex justify-start z-30 pointer-events-none">
+          <button onClick={() => setState('SELECT')} className="p-4 bg-black/40 backdrop-blur-md rounded-2xl text-white pointer-events-auto active:scale-90 transition-all min-w-[56px] min-h-[56px] flex items-center justify-center">
+            <X size={24} strokeWidth={3} />
+          </button>
+        </div>
+
+        {/* Footer de Controles - Protegido contra Barra do Safari iOS */}
+        <div className="absolute bottom-0 left-0 w-full p-8 pb-[calc(2.5rem + env(safe-area-inset-bottom))] bg-gradient-to-t from-black/80 to-transparent flex items-center justify-around z-30">
+           {/* Placeholder invisível para equilibrar o layout se necessário, ou botões reais */}
+           <div className="w-14 h-14" /> 
+           
+           <button onClick={capturePhoto} className="w-24 h-24 bg-white rounded-full flex items-center justify-center active:scale-90 transition-all border-8 border-white/20 shadow-2xl">
               <div className="w-16 h-16 bg-brand-primary rounded-full flex items-center justify-center text-white">
                 <Camera size={36} />
               </div>
            </button>
-           <button onClick={() => setFacingMode(facingMode === 'user' ? 'environment' : 'user')} className="p-4 bg-white/10 backdrop-blur-md rounded-full text-white min-w-[56px] min-h-[56px] flex items-center justify-center">
-              <RefreshCcw size={24} />
+           
+           <button onClick={() => setFacingMode(facingMode === 'user' ? 'environment' : 'user')} className="p-4 bg-black/40 backdrop-blur-md rounded-full text-white active:scale-90 transition-all min-w-[56px] min-h-[56px] flex items-center justify-center shadow-lg">
+              <RefreshCcw size={28} />
            </button>
         </div>
       </div>
