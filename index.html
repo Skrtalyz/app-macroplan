@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -81,11 +81,6 @@
         -webkit-tap-highlight-color: transparent;
         overflow-x: hidden;
       }
-      /* Fallback para dvh */
-      .h-dvh {
-        height: 100vh;
-        height: 100dvh;
-      }
       .liquid-bg {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -130,17 +125,6 @@
       }
       .dark ::-webkit-scrollbar-thumb:hover {
         background: #2A2A2F;
-      }
-
-      /* Classes utilitárias para Safe Area */
-      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-      .pt-safe { padding-top: env(safe-area-inset-top); }
-      .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
-      .mt-safe { margin-top: env(safe-area-inset-top); }
-      
-      /* Reset para mobile Safari */
-      input, textarea, button {
-        font-size: 16px !important; /* Evita zoom automático no iOS */
       }
     </style>
   <script type="importmap">

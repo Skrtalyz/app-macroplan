@@ -86,16 +86,16 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-bg transition-colors duration-300 pb-safe">
-      <header className="p-6 pt-[calc(1.5rem + env(safe-area-inset-top))] flex items-center">
-        <button onClick={onBack} className="p-4 bg-gray-50 dark:bg-dark-elevated rounded-2xl text-gray-500 hover:text-brand-primary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center shadow-sm">
+    <div className="min-h-screen bg-white dark:bg-dark-bg transition-colors duration-300">
+      <header className="p-6 flex items-center">
+        <button onClick={onBack} className="p-4 bg-gray-50 dark:bg-dark-elevated rounded-2xl text-gray-500 hover:text-brand-primary transition-colors">
           <ChevronLeft size={24} strokeWidth={3} />
         </button>
       </header>
 
       <div className="px-8 pt-4 pb-12 max-w-md mx-auto">
         <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter mb-4">
             {mode === 'LOGIN' ? t.auth_title : t.register}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 font-bold text-lg leading-tight opacity-80">
@@ -113,7 +113,7 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
                 placeholder={t.name}
-                className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-base"
+                className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-lg"
               />
             </div>
           )}
@@ -126,7 +126,7 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
               placeholder={t.email}
-              className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-base"
+              className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-lg"
             />
           </div>
 
@@ -138,7 +138,7 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
               placeholder={t.password}
-              className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-base"
+              className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-lg"
             />
           </div>
 
@@ -151,7 +151,7 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
                 value={formData.confirmPassword}
                 onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
                 placeholder={t.confirm_password}
-                className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-base"
+                className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[28px] pl-16 pr-6 py-5 font-bold focus:outline-none focus:border-brand-primary transition-all text-lg"
               />
             </div>
           )}
@@ -166,7 +166,7 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-2xl shadow-brand-primary/20 flex items-center justify-center space-x-4 active:scale-95 transition-all disabled:opacity-70 min-h-[64px]"
+            className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-2xl shadow-brand-primary/20 flex items-center justify-center space-x-4 active:scale-95 transition-all disabled:opacity-70"
           >
             {isLoading ? <Loader2 className="animate-spin" size={24} /> : (
               <>
@@ -184,7 +184,7 @@ const Auth: React.FC<AuthProps> = ({ language, onBack, onAuthSuccess }) => {
           <button 
             type="button"
             onClick={() => { setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN'); setError(null); }}
-            className="px-10 py-4 bg-gray-100 dark:bg-dark-elevated text-gray-700 dark:text-white rounded-full font-black text-xs uppercase tracking-[0.2em] active:scale-90 transition-all border border-gray-200 dark:border-white/5 min-h-[44px]"
+            className="px-10 py-4 bg-gray-100 dark:bg-dark-elevated text-gray-700 dark:text-white rounded-full font-black text-xs uppercase tracking-[0.2em] active:scale-90 transition-all border border-gray-200 dark:border-white/5"
           >
             {mode === 'LOGIN' ? t.register : t.login}
           </button>

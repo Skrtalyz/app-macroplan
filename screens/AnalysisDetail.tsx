@@ -254,10 +254,10 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
         <div className="w-full xl:w-[45%] xl:sticky xl:top-12 shrink-0">
           <div className="relative aspect-square lg:aspect-[4/5] xl:aspect-[3/4] xl:h-[calc(100vh-220px)] w-full overflow-hidden rounded-[42px] md:rounded-[56px] premium-shadow group border border-white dark:border-white/5 bg-gray-100 dark:bg-dark-card">
             <img src={meal.image} alt={meal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms] ease-out" />
-            <button onClick={onBack} className="absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-5 liquid-glass text-white rounded-[20px] md:rounded-[28px] hover:scale-110 active:scale-90 transition-all z-20 shadow-xl border-white/40 min-w-[56px] min-h-[56px] flex items-center justify-center">
+            <button onClick={onBack} className="absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-5 liquid-glass text-white rounded-[20px] md:rounded-[28px] hover:scale-110 active:scale-90 transition-all z-20 shadow-xl border-white/40">
               <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" strokeWidth={4} />
             </button>
-            <button onClick={() => onDeleteMeal(meal.id)} className="absolute top-6 right-6 md:top-8 md:right-8 p-3 md:p-5 bg-red-500/10 backdrop-blur-md text-red-500 rounded-[20px] md:rounded-[28px] hover:bg-red-500 hover:text-white transition-all active:scale-90 z-20 shadow-xl min-w-[56px] min-h-[56px] flex items-center justify-center">
+            <button onClick={() => onDeleteMeal(meal.id)} className="absolute top-6 right-6 md:top-8 md:right-8 p-3 md:p-5 bg-red-500/10 backdrop-blur-md text-red-500 rounded-[20px] md:rounded-[28px] hover:bg-red-500 hover:text-white transition-all active:scale-90 z-20 shadow-xl">
               <Trash2 className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
             </button>
           </div>
@@ -269,7 +269,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                   {meal.isAdjusted && <span className="bg-amber-500/80 text-white px-3 py-1.5 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest flex items-center shadow-lg"><CheckCircle2 size={12} className="mr-1.5" />{t.user_adjusted}</span>}
                </div>
                {meal.aiOriginalItems && (
-                 <button onClick={() => recalculateTotals(JSON.parse(JSON.stringify(meal.aiOriginalItems)), true)} className="p-2.5 bg-gray-100 dark:bg-white/5 rounded-[16px] text-gray-500 dark:text-gray-400 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex items-center space-x-2 border border-transparent dark:border-white/10 shrink-0 min-w-[44px] min-h-[44px] justify-center">
+                 <button onClick={() => recalculateTotals(JSON.parse(JSON.stringify(meal.aiOriginalItems)), true)} className="p-2.5 bg-gray-100 dark:bg-white/5 rounded-[16px] text-gray-500 dark:text-gray-400 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex items-center space-x-2 border border-transparent dark:border-white/10 shrink-0">
                    <RotateCcw size={14} strokeWidth={3} />
                    <span className="text-[8px] font-black uppercase tracking-widest hidden md:inline">{t.restore}</span>
                  </button>
@@ -331,7 +331,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                 </div>
                 <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-dark-text uppercase tracking-[0.2em]">{t.identified_foods}</h3>
               </div>
-              <button onClick={() => { setIsAddingIngredient(true); setTempItem({name: '', grams: 100, macros: null}); setSearchQuery(''); }} className="flex items-center justify-center space-x-2 px-6 py-4 bg-brand-primary text-white rounded-[20px] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-primary/20 active:scale-95 transition-all btn-glow min-h-[48px]">
+              <button onClick={() => { setIsAddingIngredient(true); setTempItem({name: '', grams: 100, macros: null}); setSearchQuery(''); }} className="flex items-center justify-center space-x-2 px-6 py-4 bg-brand-primary text-white rounded-[20px] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-primary/20 active:scale-95 transition-all btn-glow">
                 <Plus size={16} strokeWidth={4} />
                 <span>{t.add_item}</span>
               </button>
@@ -355,10 +355,10 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                           macros: foodRef || { calories: item.calories / (parseGrams(item.amount)/100), protein: item.protein / (parseGrams(item.amount)/100), carbs: item.carbs / (parseGrams(item.amount)/100), fat: item.fat / (parseGrams(item.amount)/100) } 
                         });
                         setEditingItemIndex(idx);
-                      }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-gray-400 hover:text-brand-primary transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
+                      }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-gray-400 hover:text-brand-primary transition-all">
                         <Edit3 className="w-5 h-5" strokeWidth={2.5} />
                       </button>
-                      <button onClick={() => handleRemoveItem(idx)} className="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl text-red-400 hover:bg-red-500 hover:text-white transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
+                      <button onClick={() => handleRemoveItem(idx)} className="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl text-red-400 hover:bg-red-500 hover:text-white transition-all">
                         <Trash2 className="w-5 h-5" strokeWidth={2.5} />
                       </button>
                     </div>
@@ -384,7 +384,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                    <p className="text-4xl md:text-6xl font-black text-gray-900 dark:text-dark-text tracking-tighter">
                      {formatWeight(totalGrams, user.unit, user.language).replace('g', '').replace('oz', '').trim()}
                    </p>
-                   <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-[0.3em] -mt-1">{user.unit === 'metric' ? 'g' : 'oz'}</p>
+                   <p className="text-[10px] md:text-xs font-black text-gray-400 dark:text-dark-secondary uppercase tracking-[0.3em] -mt-1">{user.unit === 'metric' ? 'g' : 'oz'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 xl:flex xl:flex-col gap-4 w-full">
@@ -409,10 +409,10 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
 
       {(editingItemIndex !== null || isAddingIngredient) && (
         <div className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-3xl flex items-end md:items-center justify-center p-4">
-           <div className="bg-white dark:bg-dark-card w-full max-w-lg rounded-t-[42px] md:rounded-[56px] p-8 md:p-14 pb-[calc(2.5rem + env(safe-area-inset-bottom))] md:pb-14 shadow-3xl border border-white/10 animate-slide-up">
+           <div className="bg-white dark:bg-dark-card w-full max-w-lg rounded-t-[42px] md:rounded-[56px] p-8 md:p-14 pb-32 md:pb-14 shadow-3xl border border-white/10 animate-slide-up">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-dark-text">{isAddingIngredient ? t.add_item : t.edit_item}</h2>
-                <button onClick={() => { setEditingItemIndex(null); setIsAddingIngredient(false); setSearchQuery(''); }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-2xl text-gray-500 min-w-[44px] min-h-[44px] flex items-center justify-center"><X size={24} /></button>
+                <button onClick={() => { setEditingItemIndex(null); setIsAddingIngredient(false); setSearchQuery(''); }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-2xl text-gray-500"><X size={20} /></button>
               </div>
 
               <div className="space-y-8">
@@ -426,14 +426,14 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t.search_food}
                         autoFocus
-                        className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[24px] pl-14 pr-6 py-5 font-bold outline-none text-gray-900 dark:text-dark-text text-lg"
+                        className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[24px] pl-14 pr-6 py-5 font-bold outline-none text-gray-900 dark:text-dark-text"
                       />
                     </div>
                     {filteredSearch.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 scrollbar-hide">
                         {filteredSearch.map((food, i) => (
-                          <button key={i} onClick={() => handleSelectSuggestion(food)} className="flex items-center justify-between p-5 bg-gray-50/50 dark:bg-white/5 rounded-2xl hover:bg-brand-primary/10 hover:border-brand-primary/30 border border-transparent transition-all min-h-[60px]">
-                            <span className="font-black text-gray-800 dark:text-white">{food.name}</span>
+                          <button key={i} onClick={() => handleSelectSuggestion(food)} className="flex items-center justify-between p-5 bg-gray-50/50 dark:bg-white/5 rounded-2xl hover:bg-brand-primary/10 hover:border-brand-primary/30 border border-transparent transition-all">
+                            <span className="font-black text-gray-800 dark:text-dark-text">{food.name}</span>
                             <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">{food.calories} kcal / 100g</span>
                           </button>
                         ))}
@@ -451,18 +451,18 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                           <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Ingrediente</span>
                           <span className="text-xl font-black text-gray-900 dark:text-dark-text">{tempItem.name}</span>
                        </div>
-                       <button onClick={() => setTempItem({name: '', grams: 100, macros: null})} className="p-3 bg-white dark:bg-white/5 rounded-xl text-gray-400 min-w-[44px] min-h-[44px] flex items-center justify-center"><RotateCcw size={18} /></button>
+                       <button onClick={() => setTempItem({name: '', grams: 100, macros: null})} className="p-3 bg-white dark:bg-white/5 rounded-xl text-gray-400"><RotateCcw size={18} /></button>
                     </div>
 
                     <div className="space-y-4">
                        <label className="text-[10px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest text-center block">Quantidade (Grama)</label>
                        <div className="flex items-center justify-center space-x-8">
-                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.max(1, tempItem.grams - 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md min-w-[56px] min-h-[56px]"><Minus size={24} /></button>
+                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.max(1, tempItem.grams - 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md"><Minus size={24} /></button>
                           <div className="text-center min-w-[120px]">
-                            <p className="text-6xl md:text-8xl font-black tracking-tighter tabular-nums text-gray-900 dark:text-white">{tempItem.grams}</p>
+                            <p className="text-6xl md:text-8xl font-black tracking-tighter tabular-nums text-gray-900 dark:text-dark-text">{tempItem.grams}</p>
                             <p className="text-xs font-black text-brand-primary uppercase tracking-[0.4em] mt-2">Grams</p>
                           </div>
-                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.min(5000, tempItem.grams + 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md min-w-[56px] min-h-[56px]"><Plus size={24} /></button>
+                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.min(5000, tempItem.grams + 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md"><Plus size={24} /></button>
                        </div>
                     </div>
 
@@ -479,7 +479,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
 
                     <button 
                       onClick={isAddingIngredient ? handleAddIngredient : handleSaveEdit} 
-                      className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-3xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center space-x-3 btn-glow min-h-[64px]"
+                      className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-3xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center space-x-3 btn-glow"
                     >
                       <span>{t.save}</span>
                     </button>
