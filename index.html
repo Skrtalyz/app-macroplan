@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -22,6 +23,7 @@
                 card: 'var(--card-color)',
                 elevated: 'var(--card-elevated)',
                 text: 'var(--text-primary)',
+                secondary: 'var(--text-secondary)',
                 border: 'var(--border-color)'
               }
             },
@@ -61,12 +63,14 @@
         --brand-shadow: rgba(37, 99, 235, 0.3);
       }
       .dark {
-        --bg-color: #0E0E11;
-        --card-color: #1A1A1F;
-        --card-elevated: #25252B;
-        --text-primary: #FFFFFF;
-        --text-secondary: #B5B5B5;
-        --border-color: #2A2A2F;
+        --bg-color: #050505;
+        --card-color: #0E0E12;
+        --card-elevated: #16161C;
+        --text-primary: #F2F2F5;
+        --text-secondary: #9A9AA3;
+        --border-color: #1C1C22;
+        --brand-primary-rgb: 59 130 246; /* #3B82F6 */
+        --brand-shadow: rgba(59, 130, 246, 0.25);
       }
       body {
         font-family: 'Inter', sans-serif;
@@ -87,8 +91,8 @@
         opacity: 0.5;
       }
       .dark .liquid-bg {
-        background: linear-gradient(-45deg, #050505, #0f172a, #1e1b4b, #050505);
-        opacity: 1;
+        background: linear-gradient(-45deg, #020202, #080808, #0C0C0E, #020202);
+        opacity: 0.9;
       }
       .liquid-glass {
         background: rgba(255, 255, 255, 0.5) !important;
@@ -96,8 +100,31 @@
         border: 1px solid rgba(255, 255, 255, 0.8) !important;
       }
       .dark .liquid-glass {
-        background: rgba(30, 30, 35, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(12, 12, 15, 0.75) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6) !important;
+      }
+      /* Premium Blue Glow for primary buttons in dark mode */
+      .dark .btn-glow {
+        box-shadow: 0 0 20px var(--brand-shadow);
+      }
+      .dark input:focus {
+        border-color: rgba(59, 130, 246, 0.4) !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+      }
+      /* High quality scrollbar for dark mode */
+      .dark ::-webkit-scrollbar {
+        width: 6px;
+      }
+      .dark ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #1C1C22;
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #2A2A2F;
       }
     </style>
   <script type="importmap">

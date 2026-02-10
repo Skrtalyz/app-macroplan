@@ -87,8 +87,8 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     if (payload[0].payload.isPlaceholder) return null;
     return (
-      <div className="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 animate-scale-in">
-        <p className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-1">{payload[0].name}</p>
+      <div className="bg-white dark:bg-dark-elevated p-4 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 animate-scale-in">
+        <p className="font-black text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">{payload[0].name}</p>
         <p className="font-black text-lg text-gray-900 dark:text-white">{payload[0].value}g</p>
       </div>
     );
@@ -146,9 +146,9 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     const totals = currentMacros.protein + currentMacros.carbs + currentMacros.fat;
     if (totals === 0) return [{ name: 'Aguardando dados', value: 1, color: '#E5E7EB', isPlaceholder: true }];
     return [
-      { name: t.protein, value: currentMacros.protein, color: '#2563EB' }, 
-      { name: t.carbs, value: currentMacros.carbs, color: '#3b82f6' },   
-      { name: t.fat, value: currentMacros.fat, color: '#f59e0b' },     
+      { name: t.protein, value: currentMacros.protein, color: '#3B82F6' }, // Neon Blue
+      { name: t.carbs, value: currentMacros.carbs, color: '#1E40AF' },   // Dark Steel Blue
+      { name: t.fat, value: currentMacros.fat, color: '#F59E0B' },     
     ].filter(item => item.value > 0);
   }, [currentMacros, t]);
 
@@ -244,7 +244,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
   return (
     <div className="w-full animate-fade-in relative lg:pb-10">
       {toast && (
-        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] bg-brand-primary text-white px-8 py-4 rounded-full font-black shadow-2xl animate-slide-up flex items-center space-x-3">
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] bg-brand-primary text-white px-8 py-4 rounded-full font-black shadow-2xl animate-slide-up flex items-center space-x-3 btn-glow">
           <CheckCircle2 size={20} />
           <span>{toast}</span>
         </div>
@@ -252,7 +252,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
 
       <div className="flex flex-col xl:flex-row gap-8 lg:gap-16 items-start">
         <div className="w-full xl:w-[45%] xl:sticky xl:top-12 shrink-0">
-          <div className="relative aspect-square lg:aspect-[4/5] xl:aspect-[3/4] xl:h-[calc(100vh-220px)] w-full overflow-hidden rounded-[42px] md:rounded-[56px] premium-shadow group border border-white dark:border-white/5 bg-gray-100 dark:bg-dark-elevated">
+          <div className="relative aspect-square lg:aspect-[4/5] xl:aspect-[3/4] xl:h-[calc(100vh-220px)] w-full overflow-hidden rounded-[42px] md:rounded-[56px] premium-shadow group border border-white dark:border-white/5 bg-gray-100 dark:bg-dark-card">
             <img src={meal.image} alt={meal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms] ease-out" />
             <button onClick={onBack} className="absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-5 liquid-glass text-white rounded-[20px] md:rounded-[28px] hover:scale-110 active:scale-90 transition-all z-20 shadow-xl border-white/40">
               <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" strokeWidth={4} />
@@ -265,29 +265,29 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
           <div className="mt-8 md:mt-12 px-2">
             <div className="flex items-center justify-between mb-4">
                <div className="flex flex-wrap items-center gap-2">
-                  <span className="bg-brand-primary text-white px-3 py-1.5 rounded-full text-[8px] md:text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl">Vision AI Analysed</span>
+                  <span className="bg-brand-primary text-white px-3 py-1.5 rounded-full text-[8px] md:text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl btn-glow">Vision AI Analysed</span>
                   {meal.isAdjusted && <span className="bg-amber-500/80 text-white px-3 py-1.5 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest flex items-center shadow-lg"><CheckCircle2 size={12} className="mr-1.5" />{t.user_adjusted}</span>}
                </div>
                {meal.aiOriginalItems && (
-                 <button onClick={() => recalculateTotals(JSON.parse(JSON.stringify(meal.aiOriginalItems)), true)} className="p-2.5 bg-gray-100 dark:bg-white/10 rounded-[16px] text-gray-500 dark:text-white hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex items-center space-x-2 border border-transparent dark:border-white/10 shrink-0">
+                 <button onClick={() => recalculateTotals(JSON.parse(JSON.stringify(meal.aiOriginalItems)), true)} className="p-2.5 bg-gray-100 dark:bg-white/5 rounded-[16px] text-gray-500 dark:text-gray-400 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex items-center space-x-2 border border-transparent dark:border-white/10 shrink-0">
                    <RotateCcw size={14} strokeWidth={3} />
                    <span className="text-[8px] font-black uppercase tracking-widest hidden md:inline">{t.restore}</span>
                  </button>
                )}
             </div>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tighter break-words drop-shadow-sm">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-dark-text leading-[1.1] tracking-tighter break-words drop-shadow-sm">
               {meal.userLabel || meal.name}
             </h1>
           </div>
         </div>
 
         <div className="flex-1 space-y-8 lg:space-y-16 w-full xl:py-4">
-          <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/10">
+          <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/5">
             <div className="flex items-center space-x-3 mb-6">
               <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
                 <Bookmark className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} />
               </div>
-              <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">{t.meal_label}</h3>
+              <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-dark-text uppercase tracking-[0.2em]">{t.meal_label}</h3>
             </div>
             <div className="space-y-5">
               <input 
@@ -295,22 +295,22 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                 value={mealLabelInput}
                 onChange={(e) => { setMealLabelInput(e.target.value); onUpdateMeal(meal.id, { userLabel: e.target.value }); }}
                 placeholder={t.meal_name_placeholder}
-                className="w-full bg-white dark:bg-black/20 border border-gray-100 dark:border-white/10 rounded-[20px] px-6 py-4 font-bold text-base md:text-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                className="w-full bg-white dark:bg-black/40 border border-gray-100 dark:border-white/5 rounded-[20px] px-6 py-4 font-bold text-base md:text-xl text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-dark-secondary"
               />
             </div>
           </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
-            <div className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/10">
-               <span className="text-gray-400 dark:text-gray-500 text-[9px] md:text-xs font-black uppercase tracking-[0.3em]">{t.energy}</span>
+            <div className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/5">
+               <span className="text-gray-400 dark:text-dark-secondary text-[9px] md:text-xs font-black uppercase tracking-[0.3em]">{t.energy}</span>
                <div className="flex items-baseline space-x-3 mt-2 md:mt-3">
-                  <span className="text-4xl md:text-7xl xl:text-8xl font-black text-gray-900 dark:text-white tracking-tighter">{formatNumber(meal.calories, user.language)}</span>
-                  <span className="text-sm md:text-2xl text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest">kcal</span>
+                  <span className="text-4xl md:text-7xl xl:text-8xl font-black text-gray-900 dark:text-dark-text tracking-tighter">{formatNumber(meal.calories, user.language)}</span>
+                  <span className="text-sm md:text-2xl text-gray-400 dark:text-dark-secondary font-black uppercase tracking-widest">kcal</span>
                </div>
             </div>
-            <div className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow flex items-center justify-between border border-white/50 dark:border-white/10">
+            <div className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow flex items-center justify-between border border-white/50 dark:border-white/5">
               <div className="flex flex-col">
-                <span className="text-gray-400 dark:text-gray-500 text-[9px] md:text-xs font-black uppercase tracking-[0.3em] mb-2">{t.health_score}</span>
+                <span className="text-gray-400 dark:text-dark-secondary text-[9px] md:text-xs font-black uppercase tracking-[0.3em] mb-2">{t.health_score}</span>
                 <span className="text-lg md:text-3xl font-black text-brand-primary tracking-tight">{meal.healthScore || 0} Points</span>
               </div>
               <div className="relative w-20 h-20 md:w-32 md:h-32">
@@ -318,20 +318,20 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                   <circle cx="40" cy="40" r="34" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-100 dark:text-white/5" />
                   <circle cx="40" cy="40" r="34" fill="transparent" stroke="currentColor" strokeWidth="8" strokeDasharray={213} strokeDashoffset={213 - (213 * (meal.healthScore || 0)) / 100} strokeLinecap="round" className="text-brand-primary transition-all duration-[1500ms]" />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center font-black text-gray-900 dark:text-white text-xl md:text-4xl">{meal.healthScore || 0}</div>
+                <div className="absolute inset-0 flex items-center justify-center font-black text-gray-900 dark:text-dark-text text-xl md:text-4xl">{meal.healthScore || 0}</div>
               </div>
             </div>
           </div>
 
-          <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/10">
+          <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/5">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
                   <Tag className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} />
                 </div>
-                <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">{t.identified_foods}</h3>
+                <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-dark-text uppercase tracking-[0.2em]">{t.identified_foods}</h3>
               </div>
-              <button onClick={() => { setIsAddingIngredient(true); setTempItem({name: '', grams: 100, macros: null}); setSearchQuery(''); }} className="flex items-center justify-center space-x-2 px-6 py-4 bg-brand-primary text-white rounded-[20px] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-primary/20 active:scale-95 transition-all">
+              <button onClick={() => { setIsAddingIngredient(true); setTempItem({name: '', grams: 100, macros: null}); setSearchQuery(''); }} className="flex items-center justify-center space-x-2 px-6 py-4 bg-brand-primary text-white rounded-[20px] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-primary/20 active:scale-95 transition-all btn-glow">
                 <Plus size={16} strokeWidth={4} />
                 <span>{t.add_item}</span>
               </button>
@@ -341,8 +341,8 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                 <div key={idx} className="flex flex-col p-6 md:p-10 bg-white/60 dark:bg-white/5 rounded-[32px] md:rounded-[48px] border border-white dark:border-white/10 group animate-slide-up hover:border-brand-primary/40 transition-all premium-shadow">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0 pr-4">
-                      <p className="text-lg md:text-2xl font-black text-gray-900 dark:text-white truncate tracking-tight mb-1">{item.name}</p>
-                      <p className="text-[10px] md:text-sm text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest">
+                      <p className="text-lg md:text-2xl font-black text-gray-900 dark:text-dark-text truncate tracking-tight mb-1">{item.name}</p>
+                      <p className="text-[10px] md:text-sm text-gray-400 dark:text-dark-secondary font-black uppercase tracking-widest">
                         {item.amount} • <span className="text-brand-primary">{item.calories} kcal</span>
                       </p>
                     </div>
@@ -355,7 +355,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                           macros: foodRef || { calories: item.calories / (parseGrams(item.amount)/100), protein: item.protein / (parseGrams(item.amount)/100), carbs: item.carbs / (parseGrams(item.amount)/100), fat: item.fat / (parseGrams(item.amount)/100) } 
                         });
                         setEditingItemIndex(idx);
-                      }} className="p-3 bg-gray-50 dark:bg-white/10 rounded-xl text-gray-400 hover:text-brand-primary transition-all">
+                      }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-gray-400 hover:text-brand-primary transition-all">
                         <Edit3 className="w-5 h-5" strokeWidth={2.5} />
                       </button>
                       <button onClick={() => handleRemoveItem(idx)} className="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl text-red-400 hover:bg-red-500 hover:text-white transition-all">
@@ -368,8 +368,8 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
             </div>
           </section>
 
-          <div className="liquid-glass p-6 md:p-16 rounded-[36px] md:rounded-[64px] premium-shadow border border-white/50 dark:border-white/10">
-            <h3 className="text-[9px] md:text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mb-8 text-center xl:text-left">Macronutrients Profile</h3>
+          <div className="liquid-glass p-6 md:p-16 rounded-[36px] md:rounded-[64px] premium-shadow border border-white/50 dark:border-white/5">
+            <h3 className="text-[9px] md:text-xs font-black text-gray-400 dark:text-dark-secondary uppercase tracking-[0.3em] mb-8 text-center xl:text-left">Macronutrients Profile</h3>
             <div className="flex flex-col xl:flex-row items-center justify-between gap-8 md:gap-16">
               <div className="w-48 h-48 md:w-80 md:h-80 min-h-[192px] md:min-h-[320px] relative flex items-center justify-center shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
@@ -377,28 +377,28 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                     <Pie data={chartData} cx="50%" cy="50%" innerRadius="65%" outerRadius="85%" paddingAngle={5} cornerRadius={12} dataKey="value" stroke="none">
                       {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="outline-none" />)}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 10, outline: 'none' }} />
+                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 100, outline: 'none' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-                   <p className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tighter">
+                   <p className="text-4xl md:text-6xl font-black text-gray-900 dark:text-dark-text tracking-tighter">
                      {formatWeight(totalGrams, user.unit, user.language).replace('g', '').replace('oz', '').trim()}
                    </p>
-                   <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-[0.3em] -mt-1">{user.unit === 'metric' ? 'g' : 'oz'}</p>
+                   <p className="text-[10px] md:text-xs font-black text-gray-400 dark:text-dark-secondary uppercase tracking-[0.3em] -mt-1">{user.unit === 'metric' ? 'g' : 'oz'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 xl:flex xl:flex-col gap-4 w-full">
                 {[
-                  { name: t.protein, value: currentMacros.protein, color: '#2563EB' },
-                  { name: t.carbs, value: currentMacros.carbs, color: '#3b82f6' },
-                  { name: t.fat, value: currentMacros.fat, color: '#f59e0b' },
+                  { name: t.protein, value: currentMacros.protein, color: '#3B82F6' },
+                  { name: t.carbs, value: currentMacros.carbs, color: '#1E40AF' },
+                  { name: t.fat, value: currentMacros.fat, color: '#F59E0B' },
                 ].map((macro, idx) => (
                   <div key={idx} className="flex flex-col sm:items-center xl:flex-row xl:items-center xl:justify-between p-6 md:p-10 bg-white/50 dark:bg-black/30 rounded-[32px] md:rounded-[48px] border border-white dark:border-white/5">
                     <div className="flex items-center space-x-4 mb-3 sm:mb-0">
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: macro.color }}></div>
-                      <span className="text-[10px] md:text-sm font-black text-gray-400 uppercase tracking-widest">{macro.name}</span>
+                      <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: macro.color }}></div>
+                      <span className="text-[10px] md:text-sm font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest">{macro.name}</span>
                     </div>
-                    <span className="text-xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tighter">{formatWeight(macro.value, user.unit, user.language)}</span>
+                    <span className="text-xl md:text-4xl font-black text-gray-900 dark:text-dark-text tracking-tighter">{formatWeight(macro.value, user.unit, user.language)}</span>
                   </div>
                 ))}
               </div>
@@ -411,8 +411,8 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
         <div className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-3xl flex items-end md:items-center justify-center p-4">
            <div className="bg-white dark:bg-dark-card w-full max-w-lg rounded-t-[42px] md:rounded-[56px] p-8 md:p-14 pb-32 md:pb-14 shadow-3xl border border-white/10 animate-slide-up">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">{isAddingIngredient ? t.add_item : t.edit_item}</h2>
-                <button onClick={() => { setEditingItemIndex(null); setIsAddingIngredient(false); setSearchQuery(''); }} className="p-3 bg-gray-50 dark:bg-white/10 rounded-2xl text-gray-500"><X size={20} /></button>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-dark-text">{isAddingIngredient ? t.add_item : t.edit_item}</h2>
+                <button onClick={() => { setEditingItemIndex(null); setIsAddingIngredient(false); setSearchQuery(''); }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-2xl text-gray-500"><X size={20} /></button>
               </div>
 
               <div className="space-y-8">
@@ -426,20 +426,20 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t.search_food}
                         autoFocus
-                        className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[24px] pl-14 pr-6 py-5 font-bold outline-none text-gray-900 dark:text-white"
+                        className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[24px] pl-14 pr-6 py-5 font-bold outline-none text-gray-900 dark:text-dark-text"
                       />
                     </div>
                     {filteredSearch.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 scrollbar-hide">
                         {filteredSearch.map((food, i) => (
                           <button key={i} onClick={() => handleSelectSuggestion(food)} className="flex items-center justify-between p-5 bg-gray-50/50 dark:bg-white/5 rounded-2xl hover:bg-brand-primary/10 hover:border-brand-primary/30 border border-transparent transition-all">
-                            <span className="font-black text-gray-800 dark:text-white">{food.name}</span>
+                            <span className="font-black text-gray-800 dark:text-dark-text">{food.name}</span>
                             <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">{food.calories} kcal / 100g</span>
                           </button>
                         ))}
                       </div>
                     ) : searchQuery.length > 2 && (
-                      <div className="text-center py-6 text-gray-400 font-bold">Nenhum ingrediente encontrado.</div>
+                      <div className="text-center py-6 text-gray-400 dark:text-dark-secondary font-bold">Nenhum ingrediente encontrado.</div>
                     )}
                   </div>
                 )}
@@ -449,17 +449,17 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                     <div className="p-6 bg-brand-primary/5 rounded-[32px] border border-brand-primary/20 flex items-center justify-between">
                        <div className="flex flex-col">
                           <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Ingrediente</span>
-                          <span className="text-xl font-black text-gray-900 dark:text-white">{tempItem.name}</span>
+                          <span className="text-xl font-black text-gray-900 dark:text-dark-text">{tempItem.name}</span>
                        </div>
-                       <button onClick={() => setTempItem({name: '', grams: 100, macros: null})} className="p-3 bg-white dark:bg-white/10 rounded-xl text-gray-400"><RotateCcw size={18} /></button>
+                       <button onClick={() => setTempItem({name: '', grams: 100, macros: null})} className="p-3 bg-white dark:bg-white/5 rounded-xl text-gray-400"><RotateCcw size={18} /></button>
                     </div>
 
                     <div className="space-y-4">
-                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center block">Quantidade (Grama)</label>
+                       <label className="text-[10px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest text-center block">Quantidade (Grama)</label>
                        <div className="flex items-center justify-center space-x-8">
                           <button onClick={() => setTempItem({ ...tempItem, grams: Math.max(1, tempItem.grams - 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md"><Minus size={24} /></button>
                           <div className="text-center min-w-[120px]">
-                            <p className="text-6xl md:text-8xl font-black tracking-tighter tabular-nums text-gray-900 dark:text-white">{tempItem.grams}</p>
+                            <p className="text-6xl md:text-8xl font-black tracking-tighter tabular-nums text-gray-900 dark:text-dark-text">{tempItem.grams}</p>
                             <p className="text-xs font-black text-brand-primary uppercase tracking-[0.4em] mt-2">Grams</p>
                           </div>
                           <button onClick={() => setTempItem({ ...tempItem, grams: Math.min(5000, tempItem.grams + 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md"><Plus size={24} /></button>
@@ -468,18 +468,18 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl flex flex-col items-center">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Proteína</span>
-                        <span className="text-lg font-black text-blue-600">{((tempItem.macros.protein * tempItem.grams) / 100).toFixed(1)}g</span>
+                        <span className="text-[8px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest">Proteína</span>
+                        <span className="text-lg font-black text-brand-primary">{((tempItem.macros.protein * tempItem.grams) / 100).toFixed(1)}g</span>
                       </div>
                       <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl flex flex-col items-center">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Carboidratos</span>
+                        <span className="text-[8px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest">Carboidratos</span>
                         <span className="text-lg font-black text-blue-400">{((tempItem.macros.carbs * tempItem.grams) / 100).toFixed(1)}g</span>
                       </div>
                     </div>
 
                     <button 
                       onClick={isAddingIngredient ? handleAddIngredient : handleSaveEdit} 
-                      className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-3xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center space-x-3"
+                      className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-3xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center space-x-3 btn-glow"
                     >
                       <span>{t.save}</span>
                     </button>
