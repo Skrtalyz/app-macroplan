@@ -166,7 +166,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     const totalCarbs = newItems.reduce((s, i) => s + (Number(i.carbs) || 0), 0);
     const totalFat = newItems.reduce((s, i) => s + (Number(i.fat) || 0), 0);
 
-    // Ajuste dinâmico do health score baseado na proporção de macros
     let scoreBase = 70;
     const totalMacros = totalProtein + totalCarbs + totalFat;
     if (totalMacros > 0) {
@@ -378,10 +377,10 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                     <Pie data={chartData} cx="50%" cy="50%" innerRadius="65%" outerRadius="85%" paddingAngle={5} cornerRadius={12} dataKey="value" stroke="none">
                       {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="outline-none" />)}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 10, outline: 'none' }} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
                    <p className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tighter">
                      {formatWeight(totalGrams, user.unit, user.language).replace('g', '').replace('oz', '').trim()}
                    </p>
