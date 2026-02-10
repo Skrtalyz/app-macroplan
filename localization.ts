@@ -146,7 +146,12 @@ export const translations = {
     change_password: 'Alterar Senha',
     current_password: 'Senha Atual',
     new_password: 'Nova Senha',
-    confirm_new_password: 'Confirmar Nova Senha'
+    confirm_new_password: 'Confirmar Nova Senha',
+    not_found_add_custom: 'Não encontrou? Adicionar novo',
+    ai_suggest: 'Pedir para IA estimar',
+    estimating: 'Estimando...',
+    custom_food_name: 'Nome do novo alimento',
+    macros_per_100g: 'Macros por 100g',
   },
   'en-US': {
     home: 'Home',
@@ -290,7 +295,12 @@ export const translations = {
     change_password: 'Change Password',
     current_password: 'Current Password',
     new_password: 'New Password',
-    confirm_new_password: 'Confirm New Password'
+    confirm_new_password: 'Confirm New Password',
+    not_found_add_custom: "Didn't find it? Add new",
+    ai_suggest: 'Ask AI to estimate',
+    estimating: 'Estimating...',
+    custom_food_name: 'New food name',
+    macros_per_100g: 'Macros per 100g',
   }
 };
 

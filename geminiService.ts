@@ -4,7 +4,6 @@ import { MealAnalysis, FoodItem } from "./types";
 
 /**
  * Obtém o cliente da IA de forma segura.
- * Se a chave não estiver configurada no ambiente, lança um erro que o UI pode tratar.
  */
 const getAIClient = () => {
   const apiKey = process.env.API_KEY;
@@ -67,24 +66,38 @@ const INGREDIENT_SCHEMA = {
 
 export const analyzeMealImage = async (base64Image: string, language: string = 'pt-BR', historyContext: string = ''): Promise<Partial<MealAnalysis>> => {
   const imageHash = await getImageHash(base64Image);
-  const cacheKey = `macroplan_cache_v3_${imageHash}`;
+  const cacheKey = `macroplan_cache_v4_${imageHash}`;
   const cachedResult = localStorage.getItem(cacheKey);
   if (cachedResult) return JSON.parse(cachedResult);
 
-  // Inicialização apenas quando necessário
   const ai = getAIClient();
   const model = 'gemini-3-flash-preview';
   const targetLanguage = language === 'pt-BR' ? 'Portuguese (Brazil)' : 'English';
   
+  const systemInstruction = `You are a world-class nutrition expert and food vision AI. 
+  Your task is to analyze food images and provide detailed nutritional estimates.
+  
+  IMPORTANT CONTEXT:
+  - Focus especially on Brazilian cuisine (staples like Rice and Beans, Linguiça, Pão de Queijo, various cuts of beef like Picanha or Acém, and typical sides like Purê de Batata or Farofa).
+  - Be flexible with food names. Handle synonyms (e.g., 'Purê' and 'Batata Amassada' are the same).
+  - If unsure about an item, use the best estimated average for that food category.
+  - History context provided: ${historyContext}. Use this to improve consistency with previous user meals.
+  - Return the results in ${targetLanguage}.`;
+
   const response = await ai.models.generateContent({
     model,
     contents: {
       parts: [
         { inlineData: { mimeType: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } },
-        { text: `Analyze this meal. Context: ${historyContext}. Language: ${targetLanguage}. Return JSON matching schema.` },
+        { text: `Analyze this meal. Provide estimated amounts and macronutrients. Match the response schema exactly.` },
       ],
     },
-    config: { responseMimeType: "application/json", responseSchema: ANALYSIS_SCHEMA, temperature: 0 },
+    config: { 
+      systemInstruction,
+      responseMimeType: "application/json", 
+      responseSchema: ANALYSIS_SCHEMA, 
+      temperature: 0.2 
+    },
   });
 
   const responseText = response.text || "{}";
@@ -98,7 +111,9 @@ export const estimateIngredientNutrition = async (name: string): Promise<Omit<Fo
   const model = 'gemini-3-flash-preview';
   const response = await ai.models.generateContent({
     model,
-    contents: `Estimate nutritional values for 100g of "${name}". Be precise and realistic.`,
+    contents: `Estimate nutritional values for 100g of "${name}". 
+    Consider synonyms and common Brazilian variations. 
+    Provide realistic values for calories, protein, carbs, and fat per 100g of the edible portion.`,
     config: { responseMimeType: "application/json", responseSchema: INGREDIENT_SCHEMA },
   });
   
