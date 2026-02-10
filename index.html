@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -80,6 +80,11 @@
         transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
         -webkit-tap-highlight-color: transparent;
         overflow-x: hidden;
+      }
+      /* Dynamic Viewport Height Utility */
+      .h-dvh {
+        height: 100vh;
+        height: 100dvh;
       }
       .liquid-bg {
         position: fixed;

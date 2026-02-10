@@ -31,15 +31,13 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = translations[user.language];
 
-  const quickMealOptions = [t.breakfast, t.lunch, t.dinner, t.snack];
-
   useEffect(() => {
     let currentStream: MediaStream | null = null;
     if (state === 'CAMERA') {
       const startCamera = async () => {
         try {
           currentStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+            video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 1280 } },
             audio: false
           });
           if (videoRef.current) {
@@ -173,14 +171,6 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
     updateAnalysisTotals(newItems);
   };
 
-  const handleRestoreItem = (index: number) => {
-    if (!analysisResult?.items) return;
-    const item = removedItems[index];
-    const newItems = [...analysisResult.items, item];
-    setRemovedItems(prev => prev.filter((_, i) => i !== index));
-    updateAnalysisTotals(newItems);
-  };
-
   const saveGrams = () => {
     if (adjustingIndex === null || !analysisResult?.items) return;
     const newItems = [...analysisResult.items];
@@ -243,11 +233,12 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
 
   if (state === 'CAMERA') {
     return (
-      <div className="fixed inset-0 z-[110] bg-black flex flex-col animate-fade-in overflow-hidden">
-        <video ref={videoRef} autoPlay playsInline className="flex-1 object-cover" />
+      <div className="fixed top-0 left-0 w-full h-dvh z-[110] bg-black flex flex-col animate-fade-in overflow-hidden touch-none">
+        <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
         <canvas ref={canvasRef} className="hidden" />
         
-        <div className="absolute inset-0 flex flex-col pointer-events-none">
+        {/* Scanner Overlay */}
+        <div className="absolute inset-0 flex flex-col pointer-events-none z-10">
           <div className="flex-1 border-[40px] border-black/40 relative">
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] aspect-square border-2 border-white/40 rounded-[40px]">
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-2xl"></div>
@@ -259,15 +250,36 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
           </div>
         </div>
 
-        <div className="p-8 pb-12 bg-gradient-to-t from-black to-transparent flex items-center justify-around">
-           <button onClick={() => setState('SELECT')} className="p-4 bg-white/10 backdrop-blur-md rounded-full text-white"><X size={24} /></button>
-           <button onClick={capturePhoto} className="w-20 h-20 bg-white rounded-full flex items-center justify-center active:scale-90 transition-all border-8 border-white/20">
-              <div className="w-14 h-14 bg-brand-primary rounded-full flex items-center justify-center text-white">
-                <Camera size={32} />
+        {/* Top Controls (Back Button) */}
+        <div className="absolute top-0 left-0 w-full p-6 pt-[calc(1.5rem+env(safe-area-inset-top))] flex items-center justify-start z-20">
+          <button onClick={() => setState('SELECT')} className="p-4 bg-black/40 backdrop-blur-md rounded-full text-white active:scale-90 transition-all">
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Camera Controls Container (Safe Area Protected) */}
+        <div className="absolute bottom-0 left-0 w-full px-8 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/80 to-transparent flex items-center justify-around z-30">
+           {/* Buffer space for layout balance if needed, or other buttons */}
+           <div className="w-14 h-14 invisible" />
+           
+           {/* Capture Button */}
+           <button 
+             onClick={capturePhoto} 
+             className="w-24 h-24 bg-white rounded-full flex items-center justify-center active:scale-90 transition-all border-8 border-white/20 shadow-2xl"
+             aria-label={t.capture}
+           >
+              <div className="w-16 h-16 bg-brand-primary rounded-full flex items-center justify-center text-white">
+                <Camera size={36} />
               </div>
            </button>
-           <button onClick={() => setFacingMode(facingMode === 'user' ? 'environment' : 'user')} className="p-4 bg-white/10 backdrop-blur-md rounded-full text-white">
-              <RefreshCcw size={24} />
+           
+           {/* Flip Camera Button */}
+           <button 
+             onClick={() => setFacingMode(facingMode === 'user' ? 'environment' : 'user')} 
+             className="p-4 bg-black/40 backdrop-blur-md rounded-full text-white active:scale-90 transition-all shadow-lg"
+             aria-label={t.switch_camera}
+           >
+              <RefreshCcw size={28} />
            </button>
         </div>
       </div>
