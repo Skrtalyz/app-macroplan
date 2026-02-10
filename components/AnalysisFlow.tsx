@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image as ImageIcon, X, Loader2, RefreshCcw, Check, Plus, Trash2, Ruler, Minus, RotateCcw } from 'lucide-react';
+import { Camera, Image as ImageIcon, X, Loader2, RefreshCcw, Check, Plus, Trash2, Ruler, Minus, RotateCcw, AlertCircle, Key } from 'lucide-react';
 import { analyzeMealImage } from '../geminiService';
 import { MealAnalysis, UserProfile, FoodItem } from '../types';
 import { translations } from '../localization';
@@ -18,7 +19,7 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<Partial<MealAnalysis> | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<{title: string, message: string, icon?: React.ReactNode} | null>(null);
   const [adjustingIndex, setAdjustingIndex] = useState<number | null>(null);
   const [tempGrams, setTempGrams] = useState<number>(100);
   const [removedItems, setRemovedItems] = useState<FoodItem[]>([]);
@@ -45,14 +46,18 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
             videoRef.current.srcObject = currentStream;
           }
         } catch (err) {
-          setCameraError(t.camera_access_denied);
+          setErrorInfo({
+            title: t.camera_access_denied,
+            message: user.language === 'pt-BR' ? 'Verifique as permissões de câmera.' : 'Check camera permissions.',
+            icon: <Camera size={40} />
+          });
           setState('ERROR');
         }
       };
       startCamera();
     }
     return () => currentStream?.getTracks().forEach(track => track.stop());
-  }, [state, facingMode, t]);
+  }, [state, facingMode, t, user.language]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -83,9 +88,12 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
 
   const processImage = async (base64: string) => {
     setState('ANALYZING');
+    setErrorInfo(null);
+    
     const historyContext = history.slice(0, 3).map(m => 
       m.items.map(i => `${i.name}: ${i.amount}`).join(', ')
     ).join(' | ');
+    
     try {
       const result = (await analyzeMealImage(base64, user.language, historyContext)) as any;
       
@@ -103,7 +111,26 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
         setSnapshot(JSON.parse(JSON.stringify(result.items)));
       }
       setState('CONFIRM');
-    } catch (error) {
+    } catch (error: any) {
+      console.error("AI Analysis Failed:", error);
+      
+      if (error.message === "MISSING_API_KEY") {
+        setErrorInfo({
+          title: user.language === 'pt-BR' ? "Configuração Necessária" : "API Key Required",
+          message: user.language === 'pt-BR' 
+            ? "Você precisa configurar a API_KEY nas variáveis de ambiente do seu projeto." 
+            : "Please set your API_KEY in the project environment variables.",
+          icon: <Key size={40} />
+        });
+      } else {
+        setErrorInfo({
+          title: user.language === 'pt-BR' ? "Erro na Análise" : "Analysis Error",
+          message: user.language === 'pt-BR' 
+            ? "Ocorreu uma falha ao processar a imagem. Tente novamente." 
+            : "Failed to process image. Please try again.",
+          icon: <AlertCircle size={40} />
+        });
+      }
       setState('ERROR');
     }
   };
@@ -293,17 +320,6 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
               placeholder={t.meal_name_placeholder}
               className="w-full bg-white dark:bg-dark-card border border-gray-100 dark:border-white/10 rounded-[20px] px-6 py-4 font-bold text-sm md:text-base focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
             />
-            <div className="flex flex-wrap gap-2">
-               {quickMealOptions.map(opt => (
-                 <button 
-                  key={opt}
-                  onClick={() => setMealName(opt)}
-                  className={`px-4 py-2 rounded-full text-[10px] md:text-xs font-black uppercase tracking-tight transition-all ${mealName === opt ? 'bg-brand-primary text-white shadow-lg' : 'bg-white/40 dark:bg-white/5 text-gray-500 hover:bg-white/60 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5'}`}
-                 >
-                   {opt}
-                 </button>
-               ))}
-            </div>
           </div>
 
           <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
@@ -323,20 +339,6 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
               ))}
             </div>
           </div>
-
-          {removedItems.length > 0 && (
-            <div className="space-y-4 animate-slide-up">
-              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.removed_items}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {removedItems.map((item, idx) => (
-                  <div key={idx} className="bg-gray-100/50 dark:bg-white/5 p-3 rounded-[18px] flex justify-between items-center opacity-60">
-                    <p className="font-bold text-gray-500 line-through text-[11px] truncate pr-4">{item.name}</p>
-                    <button onClick={() => handleRestoreItem(idx)} className="text-brand-primary font-black text-[9px] uppercase tracking-tighter shrink-0">{t.restore}</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="absolute bottom-0 w-full p-6 md:p-8 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-md border-t border-gray-100 dark:border-white/5 safe-bottom">
@@ -374,11 +376,16 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
   if (state === 'ERROR') {
     return (
       <div className="fixed inset-0 z-[150] bg-white dark:bg-dark-bg flex flex-col items-center justify-center p-10 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-red-100 rounded-[28px] flex items-center justify-center text-red-500 mb-6">
-           <X size={40} strokeWidth={3} />
+        <div className="w-24 h-24 bg-red-100 dark:bg-red-950/20 rounded-[32px] flex items-center justify-center text-red-500 mb-8 shadow-xl">
+           {errorInfo?.icon || <AlertCircle size={40} strokeWidth={3} />}
         </div>
-        <h2 className="text-xl font-black mb-4">{cameraError || 'Analysis Error'}</h2>
-        <button onClick={() => setState('SELECT')} className="bg-brand-primary text-white px-8 py-4 rounded-2xl font-black active:scale-95 transition-all">{t.back}</button>
+        <h2 className="text-2xl font-black mb-3 dark:text-white">{errorInfo?.title || 'Ops! Ocorreu um erro'}</h2>
+        <p className="text-gray-500 dark:text-gray-400 font-bold text-sm mb-12 max-w-xs leading-relaxed">
+          {errorInfo?.message}
+        </p>
+        <button onClick={() => setState('SELECT')} className="bg-brand-primary text-white px-10 py-5 rounded-[24px] font-black active:scale-95 transition-all shadow-xl shadow-brand-primary/20">
+          {t.back}
+        </button>
       </div>
     );
   }
