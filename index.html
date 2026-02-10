@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>MacroPlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -80,6 +80,10 @@
         transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
         -webkit-tap-highlight-color: transparent;
         overflow-x: hidden;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
       }
       .liquid-bg {
         position: fixed;
@@ -125,6 +129,17 @@
       }
       .dark ::-webkit-scrollbar-thumb:hover {
         background: #2A2A2F;
+      }
+
+      /* Classes utilitárias para Safe Area */
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+      .pt-safe { padding-top: env(safe-area-inset-top); }
+      .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+      .mt-safe { margin-top: env(safe-area-inset-top); }
+      
+      /* Reset para mobile Safari */
+      input, textarea, button {
+        font-size: 16px !important; /* Evita zoom automático no iOS */
       }
     </style>
   <script type="importmap">

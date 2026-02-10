@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, User, Mail, Lock, CheckCircle2, AlertCircle, Loader2, X, Eye, EyeOff, Edit2, Check } from 'lucide-react';
 import { UserProfile, UserAccount } from '../types';
@@ -114,44 +115,44 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ user, onBack, onUpdateProfi
   if (!account) return null;
 
   return (
-    <div className="flex flex-col h-full bg-transparent max-w-2xl mx-auto w-full">
-      <header className="px-4 py-4 md:py-6 flex items-center justify-between sticky top-0 bg-transparent z-40 backdrop-blur-sm">
-        <button onClick={onBack} className="p-3 bg-white dark:bg-dark-elevated rounded-2xl text-gray-500 shadow-sm border border-gray-100 dark:border-white/5 active:scale-90 transition-all">
+    <div className="flex flex-col h-full bg-transparent max-w-2xl mx-auto w-full pb-safe">
+      <header className="px-4 py-4 md:py-6 flex items-center justify-between sticky top-0 bg-transparent z-40 backdrop-blur-sm pt-[calc(1rem + env(safe-area-inset-top))]">
+        <button onClick={onBack} className="p-3 bg-white dark:bg-dark-elevated rounded-2xl text-gray-500 shadow-sm border border-gray-100 dark:border-white/5 active:scale-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
           <ChevronLeft size={20} strokeWidth={3} />
         </button>
-        <h1 className="font-black text-gray-900 dark:text-dark-text text-base md:text-lg tracking-tight">{t.personal_info}</h1>
+        <h1 className="font-black text-gray-900 dark:text-dark-text text-lg tracking-tight">{t.personal_info}</h1>
         <div className="w-10"></div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-24 scrollbar-hide">
-        <div className="flex flex-col items-center mb-6 md:mb-10">
-           <div className="w-20 h-20 md:w-24 md:h-24 bg-brand-primary/10 rounded-[32px] md:rounded-[40px] flex items-center justify-center text-brand-primary mb-4 shadow-inner relative overflow-hidden group">
-              <User className="w-9 h-9 md:w-12 md:h-12" strokeWidth={2.5} />
+        <div className="flex flex-col items-center mb-6 md:mb-10 pt-4">
+           <div className="w-24 h-24 md:w-32 md:h-32 bg-brand-primary/10 rounded-[40px] md:rounded-[48px] flex items-center justify-center text-brand-primary mb-4 shadow-inner relative overflow-hidden group">
+              <User className="w-12 h-12 md:w-16 md:h-16" strokeWidth={2.5} />
            </div>
            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">{t.profile}</p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="bg-white dark:bg-dark-card rounded-[32px] border border-white/50 dark:border-white/5 premium-shadow overflow-hidden transition-all">
-            <div className="p-5 md:p-6">
+            <div className="p-5 md:p-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="p-2.5 bg-gray-50 dark:bg-dark-elevated rounded-xl text-gray-400">
-                    <User size={18} />
+                <div className="flex items-center space-x-5 flex-1">
+                  <div className="p-3 bg-gray-50 dark:bg-dark-elevated rounded-2xl text-gray-400">
+                    <User size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 opacity-60">{t.name_label}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-60">{t.name_label}</p>
                     {isEditingName ? (
                       <input 
                         ref={nameInputRef}
                         type="text" 
                         value={newName}
                         onChange={e => setNewName(e.target.value)}
-                        className="w-full bg-transparent border-none p-0 text-lg md:text-xl font-black text-gray-900 dark:text-white focus:ring-0"
+                        className="w-full bg-transparent border-none p-0 text-xl font-black text-gray-900 dark:text-white focus:ring-0"
                         autoFocus
                       />
                     ) : (
-                      <p className="text-lg md:text-xl font-black text-gray-900 dark:text-white tracking-tight truncate">{account.name}</p>
+                      <p className="text-xl font-black text-gray-900 dark:text-white tracking-tight truncate">{account.name}</p>
                     )}
                   </div>
                 </div>
@@ -159,15 +160,27 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ user, onBack, onUpdateProfi
                 <div className="flex items-center space-x-2">
                   {isEditingName ? (
                     <>
-                      <button onClick={() => setIsEditingName(false)} className="p-2 text-gray-400"><X size={20} /></button>
-                      <button onClick={handleUpdateName} className="p-2 bg-brand-primary text-white rounded-xl">
+                      <button onClick={() => setIsEditingName(false)} className="p-3 text-gray-400 min-w-[44px] min-h-[44px] flex items-center justify-center"><X size={20} /></button>
+                      <button onClick={handleUpdateName} className="p-3 bg-brand-primary text-white rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center">
                         <Check size={20} />
                       </button>
                     </>
                   ) : (
-                    <button onClick={() => setIsEditingName(true)} className="p-3 text-brand-primary"><Edit2 size={18} /></button>
+                    <button onClick={() => setIsEditingName(true)} className="p-4 text-brand-primary min-w-[44px] min-h-[44px] flex items-center justify-center transition-transform active:scale-90"><Edit2 size={18} /></button>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-dark-card rounded-[32px] border border-white/50 dark:border-white/5 premium-shadow overflow-hidden transition-all p-5 md:p-8">
+            <div className="flex items-center space-x-5">
+              <div className="p-3 bg-gray-50 dark:bg-dark-elevated rounded-2xl text-gray-400">
+                <Mail size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-60">{t.email_label}</p>
+                <p className="text-xl font-black text-gray-900 dark:text-white tracking-tight truncate opacity-80">{account.email}</p>
               </div>
             </div>
           </div>
