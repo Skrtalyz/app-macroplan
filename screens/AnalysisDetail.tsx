@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, BrainCircuit, RotateCcw, Tag, Trash2, Plus, Minus, X, CheckCircle2, Search, Edit3, Bookmark, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { ChevronLeft, BrainCircuit, RotateCcw, Tag, Trash2, Plus, Minus, X, CheckCircle2, Search, Edit3, Bookmark, Loader2, Sparkles, AlertCircle, History as HistoryIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { MealAnalysis, UserProfile, FoodItem, Macros } from '../types';
 import { translations, formatWeight, formatNumber } from '../localization';
@@ -8,7 +8,6 @@ import { estimateIngredientNutrition } from '../geminiService';
 
 // Base de dados determinística expandida (Valores por 100g)
 const FOOD_DATABASE: (Omit<FoodItem, 'amount' | 'confidence'> & { synonyms?: string[] })[] = [
-  // Proteínas e Carnes Brasileiras
   { name: 'Frango Grelhado', calories: 165, protein: 31, carbs: 0, fat: 3.6, synonyms: ['peito de frango', 'frango fit', 'filé de frango'] },
   { name: 'Frango Cozido', calories: 150, protein: 28, carbs: 0, fat: 4, synonyms: ['frango desfiado'] },
   { name: 'Frango Assado', calories: 195, protein: 30, carbs: 0, fat: 7.7, synonyms: ['sobrecoxa', 'frango de padaria'] },
@@ -26,8 +25,6 @@ const FOOD_DATABASE: (Omit<FoodItem, 'amount' | 'confidence'> & { synonyms?: str
   { name: 'Tilápia Grelhada', calories: 128, protein: 26, carbs: 0, fat: 2.7, synonyms: ['peixe branco', 'filé de peixe'] },
   { name: 'Atum Enlatado', calories: 116, protein: 26, carbs: 0, fat: 0.8 },
   { name: 'Camarão Cozido', calories: 99, protein: 24, carbs: 0.2, fat: 0.3 },
-
-  // Carboidratos, Grãos e Acompanhamentos
   { name: 'Arroz Branco Cozido', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, synonyms: ['arroz soltinho'] },
   { name: 'Arroz Integral Cozido', calories: 110, protein: 2.6, carbs: 23, fat: 0.9 },
   { name: 'Arroz Parboilizado', calories: 125, protein: 2.6, carbs: 27, fat: 0.3 },
@@ -48,8 +45,6 @@ const FOOD_DATABASE: (Omit<FoodItem, 'amount' | 'confidence'> & { synonyms?: str
   { name: 'Tapioca', calories: 240, protein: 0, carbs: 60, fat: 0, synonyms: ['beiju'] },
   { name: 'Pão Francês', calories: 310, protein: 9, carbs: 58, fat: 3, synonyms: ['pão de sal', 'cacetinho'] },
   { name: 'Pão de Queijo', calories: 360, protein: 10, carbs: 40, fat: 18 },
-
-  // Vegetais e Frutas
   { name: 'Alface Americana', calories: 14, protein: 0.9, carbs: 2.9, fat: 0.1 },
   { name: 'Brócolis Cozido', calories: 35, protein: 2.4, carbs: 7.2, fat: 0.4 },
   { name: 'Cenoura Cozida', calories: 35, protein: 0.8, carbs: 8, fat: 0.2 },
@@ -61,11 +56,83 @@ const FOOD_DATABASE: (Omit<FoodItem, 'amount' | 'confidence'> & { synonyms?: str
   { name: 'Abacate', calories: 160, protein: 2, carbs: 9, fat: 15 },
 ];
 
+/**
+ * Health Score Algorithm (0-100)
+ * Recalibrated based on Macro Proportions and Density, not absolute gram penalties.
+ */
+const calculateMealHealthScore = (items: FoodItem[]): number => {
+  if (!items || items.length === 0) return 0;
+
+  let totalCals = 0;
+  let totalProt = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+
+  items.forEach(item => {
+    totalCals += (Number(item.calories) || 0);
+    totalProt += (Number(item.protein) || 0);
+    totalCarbs += (Number(item.carbs) || 0);
+    totalFat += (Number(item.fat) || 0);
+  });
+
+  if (totalCals === 0) return 0;
+
+  // 1. Base Score - Floor to ensure common meals aren't unfairly scored
+  let score = 30;
+
+  // 2. Proportional Macro Balance Analysis (Ideal Caloric Distribution)
+  const pCals = totalProt * 4;
+  const cCals = totalCarbs * 4;
+  const fCals = totalFat * 9;
+  const totalMacroCals = pCals + cCals + fCals;
+
+  if (totalMacroCals > 0) {
+    const pPct = pCals / totalMacroCals;
+    const fPct = fCals / totalMacroCals;
+
+    // Protein (Target: 15-30%)
+    if (pPct >= 0.15 && pPct <= 0.35) score += 25;
+    else if (pPct > 0.08) score += 15;
+    else score += 5;
+
+    // Fat (Target: 20-35%)
+    if (fPct >= 0.15 && fPct <= 0.35) score += 20;
+    else if (fPct <= 0.45) score += 10;
+    else score -= 5;
+
+    // Carbs (Target: 45-60%)
+    score += 15; 
+  }
+
+  // 3. Caloric Density Check (Gradual)
+  if (totalCals >= 300 && totalCals <= 750) score += 10;
+  else if (totalCals > 750 && totalCals <= 1000) score += 5;
+  else if (totalCals > 1000) score -= 15;
+
+  // 4. Ingredient Quality Bônus/Penalty
+  const vegKeywords = ['alface', 'brocolis', 'cenoura', 'tomate', 'pepino', 'abobrinha', 'espinafre', 'couve', 'berinjela', 'chuchu', 'abobora', 'salada', 'legumes', 'vagem', 'quiabo', 'jilo', 'vinagrete'];
+  const processedKeywords = ['linguica', 'salsicha', 'presunto', 'nugget', 'frito', 'frita', 'bacon', 'refrigerante', 'doce', 'chocolate', 'salgadinho', 'sorvete', 'hamburguer', 'farofa'];
+
+  let vegCount = 0;
+  let processedCount = 0;
+
+  items.forEach(item => {
+    const n = item.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (vegKeywords.some(k => n.includes(k))) vegCount++;
+    if (processedKeywords.some(k => n.includes(k))) processedCount++;
+  });
+
+  score += Math.min(15, vegCount * 5); // +5 per unique veg up to 15
+  score -= Math.min(30, processedCount * 10); // -10 per processed item
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+};
+
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     if (payload[0].payload.isPlaceholder) return null;
     return (
-      <div className="bg-white dark:bg-dark-elevated p-4 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 animate-scale-in">
+      <div className="bg-white dark:bg-dark-elevated p-4 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 animate-scale-in relative z-[1010]">
         <p className="font-black text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">{payload[0].name}</p>
         <p className="font-black text-lg text-gray-900 dark:text-white">{payload[0].value}g</p>
       </div>
@@ -80,9 +147,10 @@ interface AnalysisDetailProps {
   onBack: () => void;
   onUpdateMeal: (mealId: string, updates: Partial<MealAnalysis>) => void;
   onDeleteMeal: (mealId: string) => void;
+  onModalToggle?: (isOpen: boolean) => void;
 }
 
-const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onUpdateMeal, onDeleteMeal }) => {
+const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onUpdateMeal, onDeleteMeal, onModalToggle }) => {
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   const [isAddingIngredient, setIsAddingIngredient] = useState(false);
   const [tempItem, setTempItem] = useState<{ name: string, grams: number, macros: Omit<FoodItem, 'name' | 'amount' | 'confidence'> | null }>({ name: '', grams: 100, macros: null });
@@ -95,13 +163,11 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
   const t = translations[user.language];
 
   useEffect(() => {
-    if (editingItemIndex !== null || isAddingIngredient) {
-      document.body.classList.add('modal-active');
-    } else {
-      document.body.classList.remove('modal-active');
-    }
-    return () => document.body.classList.remove('modal-active');
-  }, [editingItemIndex, isAddingIngredient]);
+    const isModalOpen = editingItemIndex !== null || isAddingIngredient;
+    onModalToggle?.(isModalOpen);
+    if (isModalOpen) document.body.classList.add('modal-active');
+    else document.body.classList.remove('modal-active');
+  }, [editingItemIndex, isAddingIngredient, onModalToggle]);
 
   useEffect(() => {
     if (meal) setMealLabelInput(meal.userLabel || '');
@@ -117,11 +183,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     return match ? parseInt(match[1]) : 100;
   };
 
-  const totalGrams = useMemo(() => {
-    if (!meal) return 0;
-    return meal.items.reduce((sum, item) => sum + parseGrams(item.amount), 0);
-  }, [meal?.items]);
-
   const currentMacros = useMemo((): Macros => {
     if (!meal) return { protein: 0, carbs: 0, fat: 0 };
     return {
@@ -129,6 +190,11 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
       carbs: parseFloat(meal.items.reduce((sum, item) => sum + (Number(item.carbs) || 0), 0).toFixed(1)),
       fat: parseFloat(meal.items.reduce((sum, item) => sum + (Number(item.fat) || 0), 0).toFixed(1))
     };
+  }, [meal?.items]);
+
+  const totalGrams = useMemo(() => {
+    if (!meal) return 0;
+    return meal.items.reduce((sum, item) => sum + parseGrams(item.amount), 0);
   }, [meal?.items]);
 
   const chartData = useMemo(() => {
@@ -144,7 +210,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
   const filteredSearch = useMemo(() => {
     const q = searchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     if (!q) return [];
-    
     return FOOD_DATABASE.filter(f => {
       const matchName = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q);
       const matchSynonym = f.synonyms?.some(s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q));
@@ -152,62 +217,18 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     }).slice(0, 8);
   }, [searchQuery]);
 
-  const calculateAdvancedHealthScore = (items: FoodItem[], totalCals: number, protein: number, carbs: number, fat: number) => {
-    if (totalCals === 0) return 0;
-
-    // 1. Balanceamento de Macronutrientes (Máx 50 pontos)
-    // Usamos distribuição calórica (P=4, C=4, F=9) para o cálculo
-    const pCals = protein * 4;
-    const cCals = carbs * 4;
-    const fCals = fat * 9;
-    const totalCalCheck = pCals + cCals + fCals;
-
-    const pPct = pCals / totalCalCheck;
-    const cPct = cCals / totalCalCheck;
-    const fPct = fCals / totalCalCheck;
-
-    // Alvos ideais: P: 25%, C: 45%, F: 30%
-    let balanceScore = 0;
-    balanceScore += Math.max(0, 15 - Math.abs(pPct - 0.25) * 60); // Máx 15
-    balanceScore += Math.max(0, 20 - Math.abs(cPct - 0.45) * 40); // Máx 20
-    balanceScore += Math.max(0, 15 - Math.abs(fPct - 0.30) * 50); // Máx 15
-
-    // 2. Qualidade dos Ingredientes e Variedade (Máx 40 pontos)
-    let qualityScore = 15; // Pontuação base
-    const vegKeywords = ['alface', 'brócolis', 'cenoura', 'tomate', 'pepino', 'abobrinha', 'espinafre', 'couve', 'berinjela', 'chuchu', 'abóbora', 'salada', 'legumes'];
-    const fruitKeywords = ['banana', 'maçã', 'mamão', 'abacate', 'morango', 'uva', 'laranja', 'abacaxi', 'melancia', 'manga'];
-    const processedKeywords = ['linguiça', 'salsicha', 'presunto', 'frito', 'frita', 'bacon', 'nugget', 'empanado', 'refrigerante', 'doce', 'chocolate'];
-
-    let vegCount = 0;
-    let processedCount = 0;
-
-    items.forEach(item => {
-      const name = item.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      if (vegKeywords.some(k => name.includes(k))) vegCount++;
-      if (fruitKeywords.some(k => name.includes(k))) qualityScore += 5;
-      if (processedKeywords.some(k => name.includes(k))) processedCount++;
-    });
-
-    qualityScore += Math.min(25, vegCount * 8); // Bônus vegetais (até 25)
-    qualityScore -= Math.min(25, processedCount * 12); // Penalidade processados (até 25)
-
-    // 3. Moderação de Calorias (Máx 10 pontos)
-    let densityScore = 10;
-    if (totalCals > 800) densityScore -= 4;
-    if (totalCals > 1200) densityScore -= 6;
-
-    const finalScore = Math.round(balanceScore + qualityScore + densityScore);
-    return Math.min(100, Math.max(10, finalScore)); // Clamped 10-100 para evitar scores "mortos"
-  };
+  const removedOriginalItems = useMemo(() => {
+    if (!meal?.aiOriginalItems) return [];
+    const currentItemNames = meal.items.map(item => item.name);
+    return meal.aiOriginalItems.filter(item => !currentItemNames.includes(item.name));
+  }, [meal?.items, meal?.aiOriginalItems]);
 
   const recalculateTotals = (newItems: FoodItem[], resetToOriginal: boolean = false) => {
     const totalCalories = newItems.reduce((s, i) => s + (Number(i.calories) || 0), 0);
     const totalProtein = newItems.reduce((s, i) => s + (Number(i.protein) || 0), 0);
     const totalCarbs = newItems.reduce((s, i) => s + (Number(i.carbs) || 0), 0);
     const totalFat = newItems.reduce((s, i) => s + (Number(i.fat) || 0), 0);
-
-    const healthScore = calculateAdvancedHealthScore(newItems, totalCalories, totalProtein, totalCarbs, totalFat);
-
+    const healthScore = calculateMealHealthScore(newItems);
     if (onUpdateMeal && meal) {
       onUpdateMeal(meal.id, {
         items: newItems,
@@ -219,12 +240,16 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     }
   };
 
-  const handleSelectSuggestion = (food: Omit<FoodItem, 'amount' | 'confidence'>) => {
-    setTempItem({ 
-      name: food.name, 
-      grams: 100, 
-      macros: { calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat } 
-    });
+  const handleSelectSuggestion = (food: Omit<FoodItem, 'amount' | 'confidence'> | FoodItem, fromOriginal: boolean = false) => {
+    const grams = fromOriginal ? parseGrams((food as FoodItem).amount) : 100;
+    const multiplier = grams / 100;
+    const baseMacros = {
+      calories: food.calories / multiplier,
+      protein: food.protein / multiplier,
+      carbs: food.carbs / multiplier,
+      fat: food.fat / multiplier
+    };
+    setTempItem({ name: food.name, grams: grams, macros: baseMacros });
     setSearchQuery('');
     setCustomFoodMode(false);
   };
@@ -234,11 +259,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     setIsEstimating(true);
     try {
       const estimate = await estimateIngredientNutrition(searchQuery);
-      setTempItem({
-        name: searchQuery,
-        grams: 100,
-        macros: estimate
-      });
+      setTempItem({ name: searchQuery, grams: 100, macros: estimate });
       setCustomFoodMode(true);
       setSearchQuery('');
     } catch (e) {
@@ -298,7 +319,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
     setIsAddingIngredient(false);
     setSearchQuery('');
     setCustomFoodMode(false);
-    setIsEstimating(false);
   };
 
   if (!meal) return null;
@@ -323,7 +343,6 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
               <Trash2 className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
             </button>
           </div>
-
           <div className="mt-8 md:mt-12 px-2">
             <div className="flex items-center justify-between mb-4">
                <div className="flex flex-wrap items-center gap-2">
@@ -337,29 +356,23 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                  </button>
                )}
             </div>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-dark-text leading-[1.1] tracking-tighter break-words drop-shadow-sm">
-              {meal.userLabel || meal.name}
-            </h1>
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-dark-text leading-[1.1] tracking-tighter break-words drop-shadow-sm">{meal.userLabel || meal.name}</h1>
           </div>
         </div>
 
         <div className="flex-1 space-y-8 lg:space-y-16 w-full xl:py-4">
           <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/5">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
-                <Bookmark className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} />
-              </div>
+              <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0"><Bookmark className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} /></div>
               <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-dark-text uppercase tracking-[0.2em]">{t.meal_label}</h3>
             </div>
-            <div className="space-y-5">
-              <input 
-                type="text" 
-                value={mealLabelInput}
-                onChange={(e) => { setMealLabelInput(e.target.value); onUpdateMeal(meal.id, { userLabel: e.target.value }); }}
-                placeholder={t.meal_name_placeholder}
-                className="w-full bg-white dark:bg-black/40 border border-gray-100 dark:border-white/5 rounded-[20px] px-6 py-4 font-bold text-base md:text-xl text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-dark-secondary"
-              />
-            </div>
+            <input 
+              type="text" 
+              value={mealLabelInput}
+              onChange={(e) => { setMealLabelInput(e.target.value); onUpdateMeal(meal.id, { userLabel: e.target.value }); }}
+              placeholder={t.meal_name_placeholder}
+              className="w-full bg-white dark:bg-black/40 border border-gray-100 dark:border-white/5 rounded-[20px] px-6 py-4 font-bold text-base md:text-xl text-gray-900 dark:text-dark-text focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-dark-secondary"
+            />
           </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
@@ -373,14 +386,14 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
             <div className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow flex items-center justify-between border border-white/50 dark:border-white/5">
               <div className="flex flex-col">
                 <span className="text-gray-400 dark:text-dark-secondary text-[9px] md:text-xs font-black uppercase tracking-[0.3em] mb-2">{t.health_score}</span>
-                <span className="text-lg md:text-3xl font-black text-brand-primary tracking-tight">{meal.healthScore || 0} / 100</span>
+                <span className="text-lg md:text-3xl font-black text-brand-primary tracking-tight">{Math.round(meal.healthScore || 0)} / 100</span>
               </div>
               <div className="relative w-20 h-20 md:w-32 md:h-32">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 80 80">
                   <circle cx="40" cy="40" r="34" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-100 dark:text-white/5" />
                   <circle cx="40" cy="40" r="34" fill="transparent" stroke="currentColor" strokeWidth="8" strokeDasharray={213} strokeDashoffset={213 - (213 * (meal.healthScore || 0)) / 100} strokeLinecap="round" className="text-brand-primary transition-all duration-[1500ms]" />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center font-black text-gray-900 dark:text-dark-text text-xl md:text-4xl">{meal.healthScore || 0}</div>
+                <div className="absolute inset-0 flex items-center justify-center font-black text-gray-900 dark:text-dark-text text-xl md:text-4xl">{Math.round(meal.healthScore || 0)}</div>
               </div>
             </div>
           </div>
@@ -388,9 +401,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
           <section className="liquid-glass p-6 md:p-14 rounded-[36px] md:rounded-[56px] premium-shadow border border-white/50 dark:border-white/5">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
-                  <Tag className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} />
-                </div>
+                <div className="p-2 md:p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0"><Tag className="w-5 h-5 md:w-8 md:h-8" strokeWidth={3} /></div>
                 <h3 className="text-[10px] md:text-base font-black text-gray-900 dark:text-dark-text uppercase tracking-[0.2em]">{t.identified_foods}</h3>
               </div>
               <button onClick={() => { setIsAddingIngredient(true); setTempItem({name: '', grams: 100, macros: null}); setSearchQuery(''); }} className="flex items-center justify-center space-x-2 px-6 py-4 bg-brand-primary text-white rounded-[20px] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-primary/20 active:scale-95 transition-all btn-glow min-h-[48px]">
@@ -404,25 +415,16 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0 pr-4">
                       <p className="text-lg md:text-2xl font-black text-gray-900 dark:text-dark-text truncate tracking-tight mb-1">{item.name}</p>
-                      <p className="text-[10px] md:text-sm text-gray-400 dark:text-dark-secondary font-black uppercase tracking-widest">
-                        {item.amount} • <span className="text-brand-primary">{item.calories} kcal</span>
-                      </p>
+                      <p className="text-[10px] md:text-sm text-gray-400 dark:text-dark-secondary font-black uppercase tracking-widest">{item.amount} • <span className="text-brand-primary">{item.calories} kcal</span></p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button onClick={() => {
                         const foodRef = FOOD_DATABASE.find(f => f.name === item.name);
-                        setTempItem({ 
-                          name: item.name, 
-                          grams: parseGrams(item.amount), 
-                          macros: foodRef || { calories: item.calories / (parseGrams(item.amount)/100), protein: item.protein / (parseGrams(item.amount)/100), carbs: item.carbs / (parseGrams(item.amount)/100), fat: item.fat / (parseGrams(item.amount)/100) } 
-                        });
+                        const multiplier = parseGrams(item.amount) / 100;
+                        setTempItem({ name: item.name, grams: parseGrams(item.amount), macros: foodRef || { calories: item.calories / multiplier, protein: item.protein / multiplier, carbs: item.carbs / multiplier, fat: item.fat / multiplier } });
                         setEditingItemIndex(idx);
-                      }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-gray-400 hover:text-brand-primary transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
-                        <Edit3 className="w-5 h-5" strokeWidth={2.5} />
-                      </button>
-                      <button onClick={() => handleRemoveItem(idx)} className="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl text-red-400 hover:bg-red-500 hover:text-white transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
-                        <Trash2 className="w-5 h-5" strokeWidth={2.5} />
-                      </button>
+                      }} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-gray-400 hover:text-brand-primary transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"><Edit3 className="w-5 h-5" strokeWidth={2.5} /></button>
+                      <button onClick={() => handleRemoveItem(idx)} className="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl text-red-400 hover:bg-red-500 hover:text-white transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"><Trash2 className="w-5 h-5" strokeWidth={2.5} /></button>
                     </div>
                   </div>
                 </div>
@@ -439,22 +441,16 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                     <Pie data={chartData} cx="50%" cy="50%" innerRadius="65%" outerRadius="85%" paddingAngle={5} cornerRadius={12} dataKey="value" stroke="none">
                       {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="outline-none" />)}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 100, outline: 'none' }} />
+                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 1100, outline: 'none' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-                   <p className="text-4xl md:text-6xl font-black text-gray-900 dark:text-dark-text tracking-tighter">
-                     {formatWeight(totalGrams, user.unit, user.language).replace('g', '').replace('oz', '').trim()}
-                   </p>
+                   <p className="text-4xl md:text-6xl font-black text-gray-900 dark:text-dark-text tracking-tighter">{formatWeight(totalGrams, user.unit, user.language).replace('g', '').replace('oz', '').trim()}</p>
                    <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-[0.3em] -mt-1">{user.unit === 'metric' ? 'g' : 'oz'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 xl:flex xl:flex-col gap-4 w-full">
-                {[
-                  { name: t.protein, value: currentMacros.protein, color: '#3B82F6' },
-                  { name: t.carbs, value: currentMacros.carbs, color: '#1E40AF' },
-                  { name: t.fat, value: currentMacros.fat, color: '#F59E0B' },
-                ].map((macro, idx) => (
+                {[{ name: t.protein, value: currentMacros.protein, color: '#3B82F6' }, { name: t.carbs, value: currentMacros.carbs, color: '#1E40AF' }, { name: t.fat, value: currentMacros.fat, color: '#F59E0B' }].map((macro, idx) => (
                   <div key={idx} className="flex flex-col sm:items-center xl:flex-row xl:items-center xl:justify-between p-6 md:p-10 bg-white/50 dark:bg-black/30 rounded-[32px] md:rounded-[48px] border border-white dark:border-white/5">
                     <div className="flex items-center space-x-4 mb-3 sm:mb-0">
                       <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: macro.color }}></div>
@@ -470,24 +466,36 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
       </div>
 
       {(editingItemIndex !== null || isAddingIngredient) && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-3xl flex items-end md:items-center justify-center p-0 md:p-4 overflow-hidden h-dvh">
-           <div className="bg-white dark:bg-dark-card w-full max-w-lg rounded-t-[42px] md:rounded-[56px] p-8 md:p-14 shadow-3xl border-t md:border border-white/10 animate-slide-up flex flex-col max-h-[85dvh] relative transition-all">
-              
+        <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-3xl flex items-center md:items-center justify-center p-4 md:p-4 overflow-hidden h-dvh">
+           <div className="bg-white dark:bg-dark-card w-full max-w-lg rounded-[42px] md:rounded-[56px] p-8 md:p-14 shadow-3xl border border-white/10 animate-slide-up flex flex-col max-h-[85dvh] relative transition-all">
               <div className="flex justify-between items-center mb-6 shrink-0">
-                <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-dark-text">
-                  {isAddingIngredient ? t.add_item : t.edit_item}
-                </h2>
-                <button 
-                   onClick={closeModals} 
-                   className="p-3 bg-gray-50 dark:bg-white/5 rounded-2xl text-gray-500 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-90 transition-all"
-                >
-                  <X size={24} />
-                </button>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-dark-text">{isAddingIngredient ? t.add_item : t.edit_item}</h2>
+                <button onClick={closeModals} className="p-3 bg-gray-50 dark:bg-white/5 rounded-2xl text-gray-500 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-90 transition-all"><X size={24} /></button>
               </div>
 
               <div className="flex-1 overflow-y-auto pr-1 scrollbar-hide space-y-8 pb-32">
                 {isAddingIngredient && !tempItem.macros && (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    {/* RESTAURAÇÃO DE ITENS DA FOTO ORIGINAL */}
+                    {removedOriginalItems.length > 0 && !searchQuery && (
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center px-1">
+                          <HistoryIcon size={14} className="mr-2" /> itens detectados na foto
+                        </h3>
+                        <div className="grid grid-cols-1 gap-2">
+                          {removedOriginalItems.map((item, i) => (
+                            <button key={i} onClick={() => handleSelectSuggestion(item, true)} className="flex items-center justify-between p-5 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/20 hover:bg-brand-primary/10 transition-all text-left group">
+                               <div className="flex-1 mr-4">
+                                  <span className="font-black text-gray-800 dark:text-white block">{item.name}</span>
+                                  <span className="text-[10px] text-brand-primary font-black uppercase tracking-widest">análise original • {item.amount}</span>
+                               </div>
+                               <Plus size={20} className="text-brand-primary" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="relative">
                       <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input 
@@ -498,71 +506,45 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                         autoFocus
                         className="w-full bg-gray-50 dark:bg-dark-elevated border border-gray-100 dark:border-white/5 rounded-[24px] pl-14 pr-6 py-5 font-bold outline-none text-gray-900 dark:text-dark-text text-lg focus:ring-2 focus:ring-brand-primary/20 transition-all"
                       />
-                      {isEstimating && (
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center space-x-2 text-brand-primary">
-                          <Loader2 size={18} className="animate-spin" />
-                        </div>
-                      )}
                     </div>
 
                     <div className="grid grid-cols-1 gap-2">
                       {filteredSearch.map((food, i) => (
-                        <button key={i} onClick={() => handleSelectSuggestion(food)} className="flex items-center justify-between p-5 bg-gray-50/50 dark:bg-white/5 rounded-2xl hover:bg-brand-primary/10 hover:border-brand-primary/30 border border-transparent transition-all min-h-[60px] text-left group">
-                          <div className="flex-1 mr-4">
-                             <span className="font-black text-gray-800 dark:text-white block">{food.name}</span>
-                             {food.synonyms && (
-                               <span className="text-[10px] text-gray-400 block mt-0.5">{food.synonyms.join(', ')}</span>
-                             )}
-                          </div>
+                        <button key={i} onClick={() => handleSelectSuggestion(food)} className="flex items-center justify-between p-5 bg-gray-50/50 dark:bg-white/5 rounded-2xl hover:bg-brand-primary/10 hover:border-brand-primary/30 border border-transparent transition-all min-h-[60px] text-left">
+                          <span className="font-black text-gray-800 dark:text-white block truncate mr-4">{food.name}</span>
                           <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest whitespace-nowrap">{food.calories} kcal / 100g</span>
                         </button>
                       ))}
                     </div>
 
                     {searchQuery.length > 2 && (
-                      <div className="pt-4 border-t border-gray-100 dark:border-white/5">
-                        <button 
-                          onClick={handleManualAIEstimate}
-                          disabled={isEstimating}
-                          className="w-full flex items-center justify-center space-x-3 p-6 bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary rounded-[24px] border border-dashed border-brand-primary/30 hover:bg-brand-primary/10 transition-all active:scale-95"
-                        >
-                          {isEstimating ? (
-                            <Loader2 size={20} className="animate-spin" />
-                          ) : (
-                            <Sparkles size={20} />
-                          )}
-                          <span className="font-black text-sm uppercase tracking-widest">
-                            {isEstimating ? t.estimating : t.ai_suggest} "{searchQuery}"
-                          </span>
-                        </button>
-                      </div>
+                      <button onClick={handleManualAIEstimate} disabled={isEstimating} className="w-full flex items-center justify-center space-x-3 p-6 bg-brand-primary/5 dark:bg-brand-primary/10 text-brand-primary rounded-[24px] border border-dashed border-brand-primary/30 hover:bg-brand-primary/10 transition-all active:scale-95">
+                        {isEstimating ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
+                        <span className="font-black text-sm uppercase tracking-widest">{isEstimating ? t.estimating : t.ai_suggest} "{searchQuery}"</span>
+                      </button>
                     )}
                   </div>
                 )}
 
                 {tempItem.macros && (
                   <div className="space-y-10 animate-fade-in">
-                    <div className="p-6 bg-brand-primary/5 rounded-[32px] border border-brand-primary/20 flex items-center justify-between shrink-0">
+                    <div className="p-6 bg-brand-primary/5 rounded-[32px] border border-brand-primary/20 flex items-center justify-between">
                        <div className="flex flex-col min-w-0 pr-4">
-                          <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">
-                            {customFoodMode ? 'Novo Alimento' : 'Ingrediente'}
-                          </span>
-                          <span className="text-xl font-black text-gray-900 dark:text-dark-text truncate">
-                            {tempItem.name}
-                          </span>
+                          <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Ingrediente</span>
+                          <span className="text-xl font-black text-gray-900 dark:text-dark-text truncate">{tempItem.name}</span>
                        </div>
-                       <button onClick={() => { setTempItem({name: '', grams: 100, macros: null}); setCustomFoodMode(false); }} className="p-3 bg-white dark:bg-white/10 rounded-xl text-gray-400 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-90 transition-all"><RotateCcw size={18} /></button>
+                       <button onClick={() => { setTempItem({name: '', grams: 100, macros: null}); setCustomFoodMode(false); }} className="p-3 bg-white dark:bg-white/10 rounded-xl text-gray-400 active:scale-90 transition-all"><RotateCcw size={18} /></button>
                     </div>
 
                     <div className="space-y-4">
                        <label className="text-[10px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest text-center block">{t.grams}</label>
                        <div className="flex items-center justify-center space-x-8">
-                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.max(1, tempItem.grams - 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md min-w-[56px] min-h-[56px]"><Minus size={24} /></button>
+                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.max(1, tempItem.grams - 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md"><Minus size={24} /></button>
                           <div className="text-center min-w-[120px]">
                             <p className="text-6xl md:text-8xl font-black tracking-tighter tabular-nums text-gray-900 dark:text-white">{tempItem.grams}</p>
                             <p className="text-xs font-black text-brand-primary uppercase tracking-[0.4em] mt-2">Grams</p>
                           </div>
-                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.min(5000, tempItem.grams + 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md min-w-[56px] min-h-[56px]"><Plus size={24} /></button>
+                          <button onClick={() => setTempItem({ ...tempItem, grams: Math.min(5000, tempItem.grams + 10)})} className="w-14 h-14 bg-gray-50 dark:bg-dark-elevated rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-md"><Plus size={24} /></button>
                        </div>
                     </div>
 
@@ -572,18 +554,12 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
                         <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">{Math.round(tempItem.macros.calories)} kcal</span>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl flex flex-col items-center">
-                          <span className="text-[8px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest mb-1">{t.protein}</span>
-                          <span className="text-lg font-black text-brand-primary">{tempItem.macros.protein.toFixed(1)}g</span>
-                        </div>
-                        <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl flex flex-col items-center">
-                          <span className="text-[8px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest mb-1">{t.carbs}</span>
-                          <span className="text-lg font-black text-blue-400">{tempItem.macros.carbs.toFixed(1)}g</span>
-                        </div>
-                        <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl flex flex-col items-center">
-                          <span className="text-[8px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest mb-1">{t.fat}</span>
-                          <span className="text-lg font-black text-amber-500">{tempItem.macros.fat.toFixed(1)}g</span>
-                        </div>
+                        {[{ l: t.protein, v: tempItem.macros.protein, c: 'text-brand-primary' }, { l: t.carbs, v: tempItem.macros.carbs, c: 'text-blue-400' }, { l: t.fat, v: tempItem.macros.fat, c: 'text-amber-500' }].map((m, i) => (
+                          <div key={i} className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl flex flex-col items-center">
+                            <span className="text-[8px] font-black text-gray-400 dark:text-dark-secondary uppercase tracking-widest mb-1">{m.l}</span>
+                            <span className={`text-lg font-black ${m.c}`}>{m.v.toFixed(1)}g</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -592,10 +568,7 @@ const AnalysisDetail: React.FC<AnalysisDetailProps> = ({ user, meal, onBack, onU
 
               {tempItem.macros && (
                 <div className="absolute bottom-0 left-0 w-full p-8 pt-4 pb-[calc(1.5rem + env(safe-area-inset-bottom))] bg-gradient-to-t from-white dark:from-dark-card via-white dark:via-dark-card to-transparent shrink-0">
-                  <button 
-                    onClick={isAddingIngredient ? handleAddIngredient : handleSaveEdit} 
-                    className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-3xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center space-x-3 btn-glow min-h-[64px]"
-                  >
+                  <button onClick={isAddingIngredient ? handleAddIngredient : handleSaveEdit} className="w-full bg-brand-primary text-white py-6 rounded-[32px] font-black text-xl shadow-3xl shadow-brand-primary/30 active:scale-95 transition-all flex items-center justify-center space-x-3 btn-glow min-h-[64px]">
                     <span>{t.save}</span>
                   </button>
                 </div>

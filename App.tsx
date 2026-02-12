@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import Home from './screens/Home';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   const [selectedMeal, setSelectedMeal] = useState<MealAnalysis | null>(null);
   const [analyses, setAnalyses] = useState<MealAnalysis[]>([]);
   const [isAppReady, setIsAppReady] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [user, setUser] = useState<UserProfile>(() => {
     const defaultProfile: UserProfile = {
@@ -135,7 +137,7 @@ const App: React.FC = () => {
       case AppTab.HISTORY:
         return <History user={user} analyses={analyses} onSelectMeal={(m) => { setSelectedMeal(m); setActiveTab(AppTab.DETAIL); }} onDeleteMeal={handleDeleteMeal} />;
       case AppTab.DETAIL:
-        return <AnalysisDetail user={user} meal={selectedMeal} onBack={() => setActiveTab(AppTab.HISTORY)} onUpdateMeal={handleUpdateMeal} onDeleteMeal={handleDeleteMeal} />;
+        return <AnalysisDetail user={user} meal={selectedMeal} onBack={() => setActiveTab(AppTab.HISTORY)} onUpdateMeal={handleUpdateMeal} onDeleteMeal={handleDeleteMeal} onModalToggle={setIsModalOpen} />;
       case AppTab.SETTINGS:
         return <Settings user={user} onUpdateProfile={handleUpdateProfile} onClearHistory={handleClearHistory} onNavigate={setActiveTab} />;
       case AppTab.TERMS: 
@@ -151,13 +153,14 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent max-w-screen-xl mx-auto relative overflow-hidden">
-      <Layout activeTab={activeTab} setActiveTab={setActiveTab} t={t}>
+      <Layout activeTab={activeTab} setActiveTab={setActiveTab} t={t} hideMobileNav={isAnalysisFlowOpen || isModalOpen}>
         {renderScreen()}
       </Layout>
       {isAnalysisFlowOpen && (
         <AnalysisFlow 
           user={user} 
           onComplete={handleAnalysisComplete} 
+          onAddIngredientToggle={setIsModalOpen}
           onCancel={() => setIsAnalysisFlowOpen(false)} 
           history={analyses} 
         />
