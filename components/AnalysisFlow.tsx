@@ -10,11 +10,12 @@ interface AnalysisFlowProps {
   onComplete: (analysis: MealAnalysis) => void;
   onCancel: () => void;
   history?: MealAnalysis[];
+  onAddIngredientToggle?: (isOpen: boolean) => void;
 }
 
 type FlowState = 'SELECT' | 'CAMERA' | 'ANALYZING' | 'CONFIRM' | 'ERROR';
 
-const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel, history = [] }) => {
+const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel, history = [], onAddIngredientToggle }) => {
   const [state, setState] = useState<FlowState>('SELECT');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<Partial<MealAnalysis> | null>(null);
@@ -30,6 +31,11 @@ const AnalysisFlow: React.FC<AnalysisFlowProps> = ({ user, onComplete, onCancel,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = translations[user.language];
+
+  // Sincroniza o estado de modais internos com o componente pai (ex: para esconder navegação)
+  useEffect(() => {
+    onAddIngredientToggle?.(adjustingIndex !== null);
+  }, [adjustingIndex, onAddIngredientToggle]);
 
   useEffect(() => {
     let currentStream: MediaStream | null = null;
